@@ -191,6 +191,9 @@
     .btn-ghost { background: rgba(255,255,255,.08); color: rgba(255,255,255,.75); }
     .btn-ghost:hover { background: rgba(255,255,255,.14); color: #fff; }
 
+    .btn-outline { background: transparent; color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.25); }
+    .btn-outline:hover { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.45); }
+
     /* Body */
     .app-body {
       display: flex;
@@ -423,7 +426,8 @@
       <span style="font-weight:400; opacity:.7; letter-spacing:.06em">Email Builder</span>
     </div>
     <div class="hdr-actions">
-      <button class="btn btn-primary" id="btn-copy">&#8984; Copy HTML</button>
+      <button class="btn btn-primary" id="btn-copy">&#8984; Copy Email</button>
+      <button class="btn btn-outline" id="btn-preview">&#128065; Preview</button>
       <button class="btn btn-ghost"   id="btn-reset">Reset</button>
       <button class="btn btn-ghost"   id="btn-logout">Logout</button>
     </div>
@@ -965,6 +969,14 @@ function schedulePreview() {
 /* ══════════════════════════════════════════════
    COPY HTML
 ══════════════════════════════════════════════ */
+function openPreview() {
+  const html = buildEmail(getData());
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 function copyHTML() {
   const html = buildEmail(getData());
   const blob = new Blob([html], { type: 'text/html' });
@@ -1075,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   $('btn-copy').addEventListener('click', copyHTML);
+  $('btn-preview').addEventListener('click', openPreview);
   $('btn-reset').addEventListener('click', resetForm);
   $('btn-logout').addEventListener('click', doLogout);
 
