@@ -734,14 +734,11 @@ const flag = code => `https://flagcdn.com/w40/${code}.png`;
 /* ══════════════════════════════════════════════
    EMAIL TEMPLATE BUILDER
 ══════════════════════════════════════════════ */
-function skillPills(arr, accent) {
+function skillPills(arr) {
   if (!arr || !arr.length) return '';
-  const bg  = accent === 1 ? 'rgba(107,144,128,0.13)' : 'rgba(191,154,82,0.13)';
-  const col = accent === 1 ? '#2E6B5A' : '#8B6914';
-  const pills = arr.map(s =>
-    `<span style="display:inline-block;background-color:${bg};color:${col};font-family:'Inter',-apple-system,sans-serif;font-size:10px;font-weight:700;padding:3px 11px;border-radius:100px;letter-spacing:0.08em;text-transform:uppercase;margin:0 5px 5px 0">${esc(s)}</span>`
+  return arr.map(s =>
+    `<span style="display:inline-block;background-color:#1E2E40;color:rgba(232,226,216,0.92);font-family:'Inter',-apple-system,sans-serif;font-size:9.5px;font-weight:700;padding:5px 13px;border-radius:100px;letter-spacing:0.1em;text-transform:uppercase;margin:0 7px 7px 0">${esc(s)}</span>`
   ).join('');
-  return `<div style="margin-top:11px;line-height:1.2">${pills}</div>`;
 }
 
 function buildEmail(d) {
@@ -849,16 +846,16 @@ function buildEmail(d) {
                 <span style="display:inline-block;background-color:#D4E8E2;color:#2E6B5A;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
                   ${esc(d.c1.rate)}
                 </span>
-                ${skillPills(d.c1.skills, 1)}
               </td>
               <!-- Button -->
-              <td class="btn-cell" width="148" valign="middle" align="right" style="width:148px;vertical-align:middle;text-align:right">
+              <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
                 <a href="${esc(d.c1.url)}" target="_blank" rel="noopener noreferrer"
                    style="display:inline-block;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
               </td>
             </tr>
+            ${d.c1.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c1.skills)}</td></tr>` : ''}
           </table>
         </td></tr>
       </table>
@@ -891,16 +888,16 @@ function buildEmail(d) {
                 <span style="display:inline-block;background-color:#F0E0C0;color:#8B6914;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
                   ${esc(d.c2.rate)}
                 </span>
-                ${skillPills(d.c2.skills, 2)}
               </td>
               <!-- Button -->
-              <td class="btn-cell" width="148" valign="middle" align="right" style="width:148px;vertical-align:middle;text-align:right">
+              <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
                 <a href="${esc(d.c2.url)}" target="_blank" rel="noopener noreferrer"
                    style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
               </td>
             </tr>
+            ${d.c2.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c2.skills)}</td></tr>` : ''}
           </table>
         </td></tr>
       </table>
