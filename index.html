@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simpalm · Email Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    /* ── Variables ── */
+    :root {
+      --green:      #6B9080;
+      --green-dark: #2E6B5A;
+      --green-lt:   #D4E8E2;
+      --green-mid:  #9FBFB4;
+      --gold:       #BF9A52;
+      --gold-dark:  #8B6914;
+      --gold-lt:    #F0E0C0;
+      --dark:       #1E2736;
+      --mid:        #3D4358;
+      --muted:      #6E7490;
+      --bg:         #E8E2D8;
+      --card:       #F7F2EA;
+      --card-alt:   #F2EDE4;
+      --border:     #DDD6CA;
+      --border-lt:  #EDE8DF;
+      --sidebar-w:  400px;
+      --header-h:   54px;
+      --radius:     8px;
+      --shadow:     0 2px 6px rgba(30,39,54,.06), 0 10px 32px rgba(30,39,54,.11);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════════
+       LOGIN
+    ══════════════════════════════════════ */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 390px;
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .stripe {
+      height: 4px;
+      background: linear-gradient(90deg, #6B9080 0%, #9FBFB4 55%, #BF9A52 100%);
+    }
+
+    .login-body { padding: 40px 36px 36px; }
+
+    .login-logo {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--dark);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .login-logo .dot { color: var(--green); }
+
+    .login-sub {
+      font-family: 'Lora', Georgia, serif;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-form { display: flex; flex-direction: column; gap: 12px; }
+
+    .inp {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--dark);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .inp:focus { border-color: var(--green); }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--dark);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: background .18s, transform .1s;
+      margin-top: 6px;
+    }
+    .login-btn:hover { background: #2c3e55; }
+    .login-btn:active { transform: scale(.99); }
+
+    .login-err {
+      font-size: 12.5px;
+      color: #c0392b;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* ══════════════════════════════════════
+       APP LAYOUT
+    ══════════════════════════════════════ */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .app-header {
+      height: var(--header-h);
+      background: var(--dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      z-index: 10;
+      gap: 12px;
+    }
+
+    .hdr-brand {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .hdr-brand .dot { color: var(--green); }
+    .hdr-brand .sep { color: rgba(255,255,255,.3); margin: 0 10px; }
+
+    .hdr-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      cursor: pointer;
+      border: none;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+
+    .btn-primary { background: var(--green); color: #fff; }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-primary.ok { background: #27ae60; }
+
+    .btn-ghost { background: rgba(255,255,255,.08); color: rgba(255,255,255,.75); }
+    .btn-ghost:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+    /* Body */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .sidebar::-webkit-scrollbar { width: 5px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sidebar-inner { padding: 18px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Form section card */
+    .fsec {
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .fsec-head {
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-lt);
+      background: var(--card-alt);
+    }
+
+    .fsec-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .badge-g { background: var(--green-lt); color: var(--green-dark); }
+    .badge-o { background: var(--gold-lt);  color: var(--gold-dark); }
+
+    /* C1/C2 accent bar on left */
+    .fsec.c1 .fsec-head { border-left: 3px solid var(--green); }
+    .fsec.c2 .fsec-head { border-left: 3px solid var(--gold); }
+
+    .fsec-body { padding: 14px; display: flex; flex-direction: column; gap: 11px; }
+
+    /* Field */
+    .fg { display: flex; flex-direction: column; gap: 4px; }
+
+    .fl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mid);
+      letter-spacing: .02em;
+    }
+
+    .fi, .fs, .fta {
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--dark);
+      outline: none;
+      transition: border-color .18s, background .18s;
+      width: 100%;
+    }
+    .fi:focus, .fs:focus, .fta:focus {
+      border-color: var(--green);
+      background: #fff;
+    }
+
+    .fta {
+      resize: vertical;
+      min-height: 76px;
+      line-height: 1.55;
+    }
+
+    .fs {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236E7490' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 11px center;
+      padding-right: 30px;
+    }
+
+    /* Two-column row */
+    .fr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* Flag selector row */
+    .flag-row { display: grid; grid-template-columns: 1fr 46px; gap: 8px; align-items: end; }
+    .flag-wrap { height: 37px; display: flex; align-items: center; justify-content: center; }
+    .flag-img  { width: 38px; height: 26px; border-radius: 3px; border: 1px solid var(--border); object-fit: cover; display: block; }
+
+    /* ── Preview Pane ── */
+    .preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #cfc9c0;
+    }
+
+    .preview-toolbar {
+      background: var(--card-alt);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .preview-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .preview-hint {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .preview-scroll { flex: 1; overflow: auto; padding: 24px; }
+    .preview-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .preview-scroll::-webkit-scrollbar-track { background: transparent; }
+    .preview-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,.2); border-radius: 4px; }
+
+    #pf {
+      display: block;
+      width: 620px;
+      max-width: 100%;
+      min-height: 600px;
+      border: none;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 0 auto;
+      background: var(--card);
+      transition: height .15s;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--dark);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,.28);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all .25s;
+      pointer-events: none;
+      z-index: 999;
+      max-width: 340px;
+    }
+    .toast.on { opacity: 1; transform: translateY(0); }
+    .toast.ok  { border-left: 3px solid var(--green); }
+    .toast.err { border-left: 3px solid #c0392b; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 320px; }
+    }
+    @media (max-width: 680px) {
+      .app-body { flex-direction: column; }
+      .sidebar { width: 100%; height: 48vh; border-right: none; border-bottom: 1px solid var(--border); }
+      .preview-scroll { padding: 12px; }
+      #pf { width: 100%; }
+      .hdr-brand .sep, .hdr-brand span:last-child { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════
+     LOGIN
+═══════════════════════ -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <div class="stripe"></div>
+    <div class="login-body">
+      <div class="login-logo">Simpalm<span class="dot">&middot;</span>Staffing</div>
+      <div class="login-sub">Email Builder &mdash; Staff Access</div>
+      <form class="login-form" id="lf" autocomplete="off" novalidate>
+        <input class="inp" type="text" id="iu" placeholder="Username" autocomplete="username" spellcheck="false">
+        <input class="inp" type="password" id="ip" placeholder="Password" autocomplete="current-password">
+        <button class="login-btn" type="submit">Sign In &rarr;</button>
+        <div class="login-err" id="le">&nbsp;</div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════
+     APP
+═══════════════════════ -->
+<div id="app" class="app" style="display:none">
+
+  <header class="app-header">
+    <div class="hdr-brand">
+      Simpalm<span class="dot">&middot;</span>Staffing
+      <span class="sep">|</span>
+      <span style="font-weight:400; opacity:.7; letter-spacing:.06em">Email Builder</span>
+    </div>
+    <div class="hdr-actions">
+      <button class="btn btn-primary" id="btn-copy">&#8984; Copy HTML</button>
+      <button class="btn btn-ghost"   id="btn-reset">Reset</button>
+      <button class="btn btn-ghost"   id="btn-logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+
+        <!-- GENERAL -->
+        <div class="fsec">
+          <div class="fsec-head"><span class="fsec-title">General Info</span></div>
+          <div class="fsec-body">
+            <div class="fg">
+              <label class="fl" for="f-rec">Recipient Name</label>
+              <input class="fi" type="text" id="f-rec" placeholder="e.g. Alisha">
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-co">Client Company</label>
+              <input class="fi" type="text" id="f-co" placeholder="e.g. Sweet Magnolia Social">
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-mo">Briefing Month / Year</label>
+              <input class="fi" type="text" id="f-mo" placeholder="e.g. April 2026">
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-p1">Opening Paragraph</label>
+              <textarea class="fta" id="f-p1" rows="4" placeholder="Custom intro — what makes this search unique..."></textarea>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-p2">Second Paragraph (interview pitch)</label>
+              <textarea class="fta" id="f-p2" rows="3" placeholder="Please review the recorded interviews below..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- CANDIDATE 1 -->
+        <div class="fsec c1">
+          <div class="fsec-head">
+            <span class="fsec-title">Candidate 1</span>
+            <span class="badge badge-g">Green</span>
+          </div>
+          <div class="fsec-body">
+            <div class="fr">
+              <div class="fg">
+                <label class="fl" for="f-c1i">Initials</label>
+                <input class="fi" type="text" id="f-c1i" placeholder="IB" maxlength="3">
+              </div>
+              <div class="fg">
+                <label class="fl" for="f-c1e">Experience</label>
+                <input class="fi" type="text" id="f-c1e" placeholder="10+ Years">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-c1n">Full Name</label>
+              <input class="fi" type="text" id="f-c1n" placeholder="Isabel Blanco">
+            </div>
+            <div class="fg">
+              <label class="fl">Country</label>
+              <div class="flag-row">
+                <select class="fs" id="f-c1c"></select>
+                <div class="flag-wrap">
+                  <img class="flag-img" id="fi1" src="https://flagcdn.com/w40/br.png" alt="Flag">
+                </div>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-c1r">Monthly Rate</label>
+              <input class="fi" type="text" id="f-c1r" placeholder="US$ 2,500.00 / month">
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-c1u">Ducknowl Interview URL</label>
+              <input class="fi" type="url" id="f-c1u" placeholder="https://app.ducknowl.com/...">
+            </div>
+          </div>
+        </div>
+
+        <!-- CANDIDATE 2 -->
+        <div class="fsec c2">
+          <div class="fsec-head">
+            <span class="fsec-title">Candidate 2</span>
+            <span class="badge badge-o">Gold</span>
+          </div>
+          <div class="fsec-body">
+            <div class="fr">
+              <div class="fg">
+                <label class="fl" for="f-c2i">Initials</label>
+                <input class="fi" type="text" id="f-c2i" placeholder="NF" maxlength="3">
+              </div>
+              <div class="fg">
+                <label class="fl" for="f-c2e">Experience</label>
+                <input class="fi" type="text" id="f-c2e" placeholder="8+ Years">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-c2n">Full Name</label>
+              <input class="fi" type="text" id="f-c2n" placeholder="Neuryanne Ferreira">
+            </div>
+            <div class="fg">
+              <label class="fl">Country</label>
+              <div class="flag-row">
+                <select class="fs" id="f-c2c"></select>
+                <div class="flag-wrap">
+                  <img class="flag-img" id="fi2" src="https://flagcdn.com/w40/br.png" alt="Flag">
+                </div>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-c2r">Monthly Rate</label>
+              <input class="fi" type="text" id="f-c2r" placeholder="US$ 1,984.00 / month">
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-c2u">Ducknowl Interview URL</label>
+              <input class="fi" type="url" id="f-c2u" placeholder="https://app.ducknowl.com/...">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ── PREVIEW ── -->
+    <main class="preview-area">
+      <div class="preview-toolbar">
+        <span class="preview-lbl">Live Preview</span>
+        <span class="preview-hint">Updates as you type &nbsp;&middot;&nbsp; Click &ldquo;Copy HTML&rdquo; then paste into Gmail</span>
+      </div>
+      <div class="preview-scroll">
+        <iframe id="pf" title="Email preview" sandbox="allow-same-origin allow-popups"></iframe>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════ */
+const CREDS = { user: 'SimpalmStaff', pass: 'Simpalmstaff@2026' };
+const SK = 'sp_auth_v1';
+
+const COUNTRIES = [
+  { code:'ar', name:'Argentina' },
+  { code:'au', name:'Australia' },
+  { code:'bd', name:'Bangladesh' },
+  { code:'bo', name:'Bolivia' },
+  { code:'br', name:'Brazil' },
+  { code:'ca', name:'Canada' },
+  { code:'cl', name:'Chile' },
+  { code:'co', name:'Colombia' },
+  { code:'cr', name:'Costa Rica' },
+  { code:'do', name:'Dominican Republic' },
+  { code:'ec', name:'Ecuador' },
+  { code:'sv', name:'El Salvador' },
+  { code:'gh', name:'Ghana' },
+  { code:'gt', name:'Guatemala' },
+  { code:'hn', name:'Honduras' },
+  { code:'in', name:'India' },
+  { code:'id', name:'Indonesia' },
+  { code:'ke', name:'Kenya' },
+  { code:'mx', name:'Mexico' },
+  { code:'ni', name:'Nicaragua' },
+  { code:'ng', name:'Nigeria' },
+  { code:'pa', name:'Panama' },
+  { code:'py', name:'Paraguay' },
+  { code:'pe', name:'Peru' },
+  { code:'ph', name:'Philippines' },
+  { code:'pk', name:'Pakistan' },
+  { code:'pl', name:'Poland' },
+  { code:'pt', name:'Portugal' },
+  { code:'ro', name:'Romania' },
+  { code:'za', name:'South Africa' },
+  { code:'es', name:'Spain' },
+  { code:'ua', name:'Ukraine' },
+  { code:'gb', name:'United Kingdom' },
+  { code:'us', name:'United States' },
+  { code:'uy', name:'Uruguay' },
+  { code:'ve', name:'Venezuela' },
+  { code:'vn', name:'Vietnam' },
+];
+
+/* ══════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════ */
+const loggedIn = () => sessionStorage.getItem(SK) === '1';
+
+function doLogin(u, p) {
+  if (u === CREDS.user && p === CREDS.pass) {
+    sessionStorage.setItem(SK, '1');
+    return true;
+  }
+  return false;
+}
+
+function doLogout() {
+  sessionStorage.removeItem(SK);
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('iu').value = '';
+  document.getElementById('ip').value = '';
+  document.getElementById('le').innerHTML = '&nbsp;';
+}
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+let _tt;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} on`;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('on'), 3000);
+}
+
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const val = id => ($( id)?.value || '').trim();
+const esc = s => String(s)
+  .replace(/&/g,'&amp;')
+  .replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;');
+const flag = code => `https://flagcdn.com/w40/${code}.png`;
+
+/* ══════════════════════════════════════════════
+   EMAIL TEMPLATE BUILDER
+══════════════════════════════════════════════ */
+function buildEmail(d) {
+  return `<!DOCTYPE html>
+<html lang="en" style="font-size:16px;-webkit-font-smoothing:antialiased">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Candidate Briefing &mdash; ${esc(d.company)} &middot; Simpalm Staffing</title>
+<meta name="description" content="Candidate briefing for ${esc(d.company)} — Simpalm Staffing.">
+<style type="text/css">
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format('truetype')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf) format('truetype')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf) format('truetype')}
+@font-face{font-family:'Lora';font-style:italic;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFkqg.ttf) format('truetype')}
+@font-face{font-family:'Lora';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787weuyJG.ttf) format('truetype')}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFRD-vYSZviVYUb_rj3ij__anPXDTnCjmHKM4nYO7KN_qiTbtY.ttf) format('truetype')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKeiukDQ.ttf) format('truetype')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvUDQ.ttf) format('truetype')}
+@media only screen and (max-width:640px){
+  .email-card{width:100%!important}
+  .pad-sides{padding-left:24px!important;padding-right:24px!important}
+  .btn-cell{display:block!important;padding-top:14px!important;padding-left:0!important;text-align:center!important}
+}
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#E8E2D8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#E8E2D8" role="presentation" style="background-color:#E8E2D8">
+<tr><td align="center" style="padding:32px 16px">
+
+<table class="email-card" width="620" cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="width:620px;max-width:100%;background-color:#F7F2EA;border-radius:8px;box-shadow:0 2px 6px rgba(30,39,54,0.06),0 10px 32px rgba(30,39,54,0.11)">
+
+  <!-- TOP STRIPE -->
+  <tr><td height="4" style="height:4px;line-height:4px;font-size:0;background:linear-gradient(90deg,#6B9080 0%,#9FBFB4 55%,#BF9A52 100%)">&nbsp;</td></tr>
+
+  <!-- HEADER -->
+  <tr>
+    <td class="pad-sides" align="center" style="padding:26px 56px 20px;border-bottom:1px solid #EDE8DF;background-color:#F7F2EA;text-align:center">
+      <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#1E2736;margin-bottom:5px">
+        Simpalm<span style="color:#6B9080">&middot;</span>Staffing
+      </div>
+      <div style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:12px;color:#6E7490;letter-spacing:0.03em">
+        Candidate Briefing &mdash; ${esc(d.company)}
+      </div>
+    </td>
+  </tr>
+
+  <!-- SECTION LABEL -->
+  <tr>
+    <td class="pad-sides" style="padding:0 56px">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:28px">
+        <tr>
+          <td style="border-bottom:1px solid #DDD6CA;line-height:0;font-size:0">&nbsp;</td>
+          <td nowrap align="center" style="padding:0 16px;white-space:nowrap;font-family:'Inter',-apple-system,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#BF9A52;font-weight:700">
+            Candidate Briefing &middot; ${esc(d.month)}
+          </td>
+          <td style="border-bottom:1px solid #DDD6CA;line-height:0;font-size:0">&nbsp;</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- BODY -->
+  <tr>
+    <td class="pad-sides" style="padding:28px 56px 42px">
+
+      <p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:18px;color:#1E2736;margin:0 0 10px 0">
+        Hi ${esc(d.recipient)},
+      </p>
+
+      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;color:#3D4358;line-height:1.85;margin:0 0 14px 0">
+        ${esc(d.intro1)}
+      </p>
+      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;color:#3D4358;line-height:1.85;margin:0 0 30px 0">
+        ${esc(d.intro2)}
+      </p>
+
+      <!-- ── CANDIDATE 1 (green) ── -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-radius:0 10px 10px 0;border:1px solid #D5D0C8;border-left:4px solid #6B9080;background-color:#F2EDE4;margin-bottom:14px">
+        <tr><td style="padding:22px 22px 20px">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr>
+              <!-- Avatar -->
+              <td width="80" valign="top" style="width:80px;padding-right:18px;vertical-align:top">
+                <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+                  <td width="80" height="80" align="center" valign="middle"
+                      style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6B9080 0%,#2C3E55 100%);font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:700;color:#ffffff;text-align:center;vertical-align:middle;line-height:80px">
+                    ${esc(d.c1.initials)}
+                  </td>
+                </tr></table>
+              </td>
+              <!-- Info -->
+              <td valign="middle" style="vertical-align:middle;padding-right:14px">
+                <div style="font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:700;color:#1E2736;margin-bottom:6px">
+                  ${esc(d.c1.name)}
+                </div>
+                <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
+                  <img src="${flag(d.c1.country)}" alt="${esc(d.c1.countryName)}" width="24" height="16"
+                       style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
+                  ${esc(d.c1.countryName)} &nbsp;&middot;&nbsp; ${esc(d.c1.exp)}
+                </div>
+                <span style="display:inline-block;background-color:#D4E8E2;color:#2E6B5A;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
+                  ${esc(d.c1.rate)}
+                </span>
+              </td>
+              <!-- Button -->
+              <td class="btn-cell" width="148" valign="middle" align="right" style="width:148px;vertical-align:middle;text-align:right">
+                <a href="${esc(d.c1.url)}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
+                  &#9654;&nbsp;Watch Interview
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+
+      <!-- ── CANDIDATE 2 (gold) ── -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-radius:0 10px 10px 0;border:1px solid #D5D0C8;border-left:4px solid #BF9A52;background-color:#F2EDE4;margin-bottom:30px">
+        <tr><td style="padding:22px 22px 20px">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr>
+              <!-- Avatar -->
+              <td width="80" valign="top" style="width:80px;padding-right:18px;vertical-align:top">
+                <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+                  <td width="80" height="80" align="center" valign="middle"
+                      style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#BF9A52 0%,#8B6914 100%);font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:700;color:#ffffff;text-align:center;vertical-align:middle;line-height:80px">
+                    ${esc(d.c2.initials)}
+                  </td>
+                </tr></table>
+              </td>
+              <!-- Info -->
+              <td valign="middle" style="vertical-align:middle;padding-right:14px">
+                <div style="font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:700;color:#1E2736;margin-bottom:6px">
+                  ${esc(d.c2.name)}
+                </div>
+                <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
+                  <img src="${flag(d.c2.country)}" alt="${esc(d.c2.countryName)}" width="24" height="16"
+                       style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
+                  ${esc(d.c2.countryName)} &nbsp;&middot;&nbsp; ${esc(d.c2.exp)}
+                </div>
+                <span style="display:inline-block;background-color:#F0E0C0;color:#8B6914;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
+                  ${esc(d.c2.rate)}
+                </span>
+              </td>
+              <!-- Button -->
+              <td class="btn-cell" width="148" valign="middle" align="right" style="width:148px;vertical-align:middle;text-align:right">
+                <a href="${esc(d.c2.url)}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
+                  &#9654;&nbsp;Watch Interview
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+
+      <!-- PRICING NOTE -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:22px">
+        <tr>
+          <td style="background-color:#1E2E40;border-radius:8px;padding:20px 24px">
+            <p style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:14px;color:rgba(247,242,234,0.92);line-height:1.78;margin:0">
+              Rates shown are
+              <strong style="color:#BF9A52;font-style:normal">all-inclusive</strong>
+              for a full-time dedicated Virtual Assistant &mdash; typically 160&nbsp;hours/month.
+              They cover Simpalm&rsquo;s sourcing, vetting, and ongoing support with
+              <span style="color:#9FBFB4;font-weight:600">no placement fees</span>.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- NEXT STEPS -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td style="background-color:#D4E8E2;border-radius:10px;border:1px solid rgba(107,144,128,0.22);padding:22px 24px">
+            <div style="font-family:'Inter',-apple-system,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#6B9080;font-weight:700;margin-bottom:18px">
+              How Would You Like to Proceed?
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
+              <tr>
+                <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">01</td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Receive the <strong>full detailed resumes</strong> for both candidates</td>
+              </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
+              <tr>
+                <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">02</td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Schedule a <strong>short call</strong> to discuss these candidates in detail</td>
+              </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:20px">
+              <tr>
+                <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">03</td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Arrange <strong>live interviews</strong> with the candidates directly</td>
+              </tr>
+            </table>
+            <p style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:14px;color:#3D4358;line-height:1.75;margin:0">
+              Just reply with your preference and I&rsquo;ll make it happen right away.
+              Looking forward to helping you find the
+              <strong style="color:#1E2736;font-style:normal">perfect fit</strong>
+              for your team.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+
+  <!-- FOOTER -->
+  <tr>
+    <td class="pad-sides" align="center" style="background-color:#F2EDE4;border-top:1px solid #EDE8DF;padding:18px 56px 24px;text-align:center">
+      <div style="font-family:'Playfair Display',Georgia,serif;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#6E7490;margin-bottom:10px">
+        Simpalm&middot;Staffing
+      </div>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin:0 auto 10px">
+        <tr>
+          <td width="4" height="4" bgcolor="#9FBFB4" style="width:4px;height:4px;border-radius:50%;background-color:#9FBFB4;font-size:0;line-height:0">&nbsp;</td>
+          <td width="8" style="font-size:0">&nbsp;</td>
+          <td width="4" height="4" bgcolor="#9FBFB4" style="width:4px;height:4px;border-radius:50%;background-color:#9FBFB4;font-size:0;line-height:0">&nbsp;</td>
+          <td width="8" style="font-size:0">&nbsp;</td>
+          <td width="4" height="4" bgcolor="#9FBFB4" style="width:4px;height:4px;border-radius:50%;background-color:#9FBFB4;font-size:0;line-height:0">&nbsp;</td>
+        </tr>
+      </table>
+      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;color:#6E7490;line-height:1.8;margin:0">
+        You&rsquo;re receiving this as part of your candidate search with Simpalm&nbsp;Staffing.<br>
+        <a href="#" style="color:#6B9080;text-decoration:none;font-weight:600">Unsubscribe</a>
+        &nbsp;&middot;&nbsp;
+        <a href="#" style="color:#6B9080;text-decoration:none;font-weight:600">simpalm.com</a>
+      </p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>`;
+}
+
+/* ══════════════════════════════════════════════
+   FORM DATA
+══════════════════════════════════════════════ */
+function getData() {
+  const c1code = val('f-c1c') || 'br';
+  const c2code = val('f-c2c') || 'br';
+  const c1info = COUNTRIES.find(c => c.code === c1code) || { name: 'Brazil' };
+  const c2info = COUNTRIES.find(c => c.code === c2code) || { name: 'Brazil' };
+
+  return {
+    recipient: val('f-rec')  || 'there',
+    company:   val('f-co')   || '[Client Company]',
+    month:     val('f-mo')   || '[Month Year]',
+    intro1:    val('f-p1')   || '[Opening paragraph goes here]',
+    intro2:    val('f-p2')   || '[Second paragraph goes here]',
+    c1: {
+      initials:    (val('f-c1i') || 'C1').toUpperCase(),
+      name:        val('f-c1n')  || 'Candidate One',
+      country:     c1code,
+      countryName: c1info.name,
+      exp:         val('f-c1e')  || 'Years Experience',
+      rate:        val('f-c1r')  || 'US$ —',
+      url:         val('f-c1u')  || '#',
+    },
+    c2: {
+      initials:    (val('f-c2i') || 'C2').toUpperCase(),
+      name:        val('f-c2n')  || 'Candidate Two',
+      country:     c2code,
+      countryName: c2info.name,
+      exp:         val('f-c2e')  || 'Years Experience',
+      rate:        val('f-c2r')  || 'US$ —',
+      url:         val('f-c2u')  || '#',
+    },
+  };
+}
+
+/* ══════════════════════════════════════════════
+   PREVIEW
+══════════════════════════════════════════════ */
+function updatePreview() {
+  const frame = $('pf');
+  frame.srcdoc = buildEmail(getData());
+  frame.onload = () => {
+    try {
+      const h = frame.contentDocument.documentElement.scrollHeight;
+      frame.style.height = Math.max(600, h + 8) + 'px';
+    } catch (e) {
+      frame.style.height = '820px';
+    }
+  };
+}
+
+let _pt;
+function schedulePreview() {
+  clearTimeout(_pt);
+  _pt = setTimeout(updatePreview, 240);
+}
+
+/* ══════════════════════════════════════════════
+   COPY HTML
+══════════════════════════════════════════════ */
+async function copyHTML() {
+  const html = buildEmail(getData());
+  try {
+    await navigator.clipboard.writeText(html);
+    const btn = $('btn-copy');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '&#10003; Copied!';
+    btn.classList.add('ok');
+    toast('HTML copied! Open Gmail → Compose → paste with Ctrl+Shift+V (or Cmd+Shift+V on Mac).', 'ok');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('ok'); }, 2400);
+  } catch {
+    toast('Clipboard access denied. Please allow it in your browser settings.', 'err');
+  }
+}
+
+/* ══════════════════════════════════════════════
+   RESET
+══════════════════════════════════════════════ */
+function resetForm() {
+  document.querySelectorAll('.fi, .fta').forEach(el => el.value = '');
+  $('f-c1c').value = 'br';
+  $('f-c2c').value = 'br';
+  $('fi1').src = flag('br');
+  $('fi2').src = flag('br');
+  updatePreview();
+  toast('Form cleared.', 'ok');
+}
+
+/* ══════════════════════════════════════════════
+   COUNTRY SELECTS
+══════════════════════════════════════════════ */
+function populateSelect(id, defaultCode) {
+  const sel = $(id);
+  COUNTRIES.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.code;
+    o.textContent = c.name;
+    if (c.code === defaultCode) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   SHOW APP
+══════════════════════════════════════════════ */
+function showApp() {
+  $('login-screen').style.display = 'none';
+  $('app').style.display = 'flex';
+
+  populateSelect('f-c1c', 'br');
+  populateSelect('f-c2c', 'br');
+
+  // Flag previews update on country change
+  $('f-c1c').addEventListener('change', function () {
+    $('fi1').src = flag(this.value);
+    schedulePreview();
+  });
+  $('f-c2c').addEventListener('change', function () {
+    $('fi2').src = flag(this.value);
+    schedulePreview();
+  });
+
+  // All form inputs trigger preview
+  document.querySelectorAll('.fi, .fta, .fs').forEach(el => {
+    el.addEventListener('input', schedulePreview);
+  });
+
+  updatePreview();
+}
+
+/* ══════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+
+  $('lf').addEventListener('submit', e => {
+    e.preventDefault();
+    const u = $('iu').value.trim();
+    const p = $('ip').value;
+    if (doLogin(u, p)) {
+      showApp();
+    } else {
+      const err = $('le');
+      err.textContent = 'Invalid credentials. Please try again.';
+      $('ip').value = '';
+      $('ip').focus();
+      setTimeout(() => { err.innerHTML = '&nbsp;'; }, 3500);
+    }
+  });
+
+  $('btn-copy').addEventListener('click', copyHTML);
+  $('btn-reset').addEventListener('click', resetForm);
+  $('btn-logout').addEventListener('click', doLogout);
+
+  if (loggedIn()) showApp();
+});
+</script>
+</body>
+</html>
