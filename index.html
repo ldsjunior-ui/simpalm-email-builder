@@ -968,12 +968,13 @@ function schedulePreview() {
 async function copyHTML() {
   const html = buildEmail(getData());
   try {
-    await navigator.clipboard.writeText(html);
+    const blob = new Blob([html], { type: 'text/html' });
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
     const btn = $('btn-copy');
     const orig = btn.innerHTML;
     btn.innerHTML = '&#10003; Copied!';
     btn.classList.add('ok');
-    toast('HTML copied! Open Gmail → Compose → paste with Ctrl+Shift+V (or Cmd+Shift+V on Mac).', 'ok');
+    toast('Email copiado! Abra o Gmail → Compose → cole com Cmd+V (Mac) ou Ctrl+V (Windows).', 'ok');
     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('ok'); }, 2400);
   } catch {
     toast('Clipboard access denied. Please allow it in your browser settings.', 'err');
