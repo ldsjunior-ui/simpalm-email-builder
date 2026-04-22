@@ -965,20 +965,38 @@ function schedulePreview() {
 /* ══════════════════════════════════════════════
    COPY HTML
 ══════════════════════════════════════════════ */
-async function copyHTML() {
+function copyHTML() {
   const html = buildEmail(getData());
-  try {
-    const blob = new Blob([html], { type: 'text/html' });
-    await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
-    const btn = $('btn-copy');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '&#10003; Copied!';
-    btn.classList.add('ok');
-    toast('Email copiado! Abra o Gmail → Compose → cole com Cmd+V (Mac) ou Ctrl+V (Windows).', 'ok');
-    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('ok'); }, 2400);
-  } catch {
-    toast('Clipboard access denied. Please allow it in your browser settings.', 'err');
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+
+  const w = window.open(url, '_blank', 'width=680,height=120,left=300,top=200');
+  if (!w) {
+    toast('Popup bloqueado — permita popups para este site e tente novamente.', 'err');
+    URL.revokeObjectURL(url);
+    return;
   }
+
+  w.onload = () => {
+    try {
+      w.document.execCommand('selectAll', false, null);
+      const ok = w.document.execCommand('copy', false, null);
+      if (ok) {
+        const btn = $('btn-copy');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '&#10003; Copiado!';
+        btn.classList.add('ok');
+        toast('Email copiado com links! Cole no Gmail com Cmd+V (Mac) ou Ctrl+V (Windows).', 'ok');
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('ok'); }, 2400);
+        setTimeout(() => w.close(), 800);
+      } else {
+        toast('Na janela aberta: Cmd+A para selecionar tudo, Cmd+C para copiar — depois feche e cole no Gmail.', 'ok');
+      }
+    } catch {
+      toast('Na janela aberta: Cmd+A para selecionar tudo, Cmd+C para copiar — depois feche e cole no Gmail.', 'ok');
+    }
+    URL.revokeObjectURL(url);
+  };
 }
 
 /* ══════════════════════════════════════════════
