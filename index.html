@@ -548,6 +548,21 @@
           </div>
         </div>
 
+        <!-- FOOTER LINKS -->
+        <div class="fsec">
+          <div class="fsec-head"><span class="fsec-title">Footer Links</span></div>
+          <div class="fsec-body">
+            <div class="fg">
+              <label class="fl" for="f-site">Website URL</label>
+              <input class="fi" type="url" id="f-site" placeholder="https://simpalm.com" value="https://simpalm.com">
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-unsub">Unsubscribe URL</label>
+              <input class="fi" type="url" id="f-unsub" placeholder="https://simpalm.com/unsubscribe">
+            </div>
+          </div>
+        </div>
+
       </div>
     </aside>
 
@@ -893,9 +908,9 @@ function buildEmail(d) {
       </table>
       <p style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;color:#6E7490;line-height:1.8;margin:0">
         You&rsquo;re receiving this as part of your candidate search with Simpalm&nbsp;Staffing.<br>
-        <a href="#" style="color:#6B9080;text-decoration:none;font-weight:600">Unsubscribe</a>
+        <a href="${esc(d.unsubUrl)}" style="color:#6B9080;text-decoration:none;font-weight:600">Unsubscribe</a>
         &nbsp;&middot;&nbsp;
-        <a href="#" style="color:#6B9080;text-decoration:none;font-weight:600">simpalm.com</a>
+        <a href="${esc(d.siteUrl)}" style="color:#6B9080;text-decoration:none;font-weight:600">simpalm.com</a>
       </p>
     </td>
   </tr>
@@ -941,6 +956,8 @@ function getData() {
       rate:        val('f-c2r')  || 'US$ —',
       url:         val('f-c2u')  || '#',
     },
+    siteUrl:  val('f-site')  || 'https://simpalm.com',
+    unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
   };
 }
 
