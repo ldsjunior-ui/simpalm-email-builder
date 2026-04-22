@@ -194,6 +194,23 @@
     .btn-outline { background: transparent; color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.25); }
     .btn-outline:hover { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.45); }
 
+    /* Skill selector */
+    .skill-count { font-weight: 400; color: var(--muted); font-size: 10px; margin-left: 4px; }
+    .skill-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; min-height: 0; }
+    .skill-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: var(--green-lt); color: var(--green-dark);
+      font-size: 10.5px; font-weight: 600; padding: 4px 8px 4px 10px;
+      border-radius: 100px; letter-spacing: 0.04em; line-height: 1;
+    }
+    .c2 .skill-chip { background: var(--gold-lt); color: var(--gold-dark); }
+    .skill-rm {
+      background: none; border: none; cursor: pointer; color: inherit;
+      padding: 0; font-size: 13px; line-height: 1; opacity: .6;
+      display: flex; align-items: center;
+    }
+    .skill-rm:hover { opacity: 1; }
+
     /* Body */
     .app-body {
       display: flex;
@@ -504,6 +521,25 @@
               <label class="fl" for="f-c1u">Ducknowl Interview URL</label>
               <input class="fi" type="url" id="f-c1u" placeholder="https://app.ducknowl.com/...">
             </div>
+            <div class="fg">
+              <label class="fl">Skills <span class="skill-count" id="c1-skill-count">0 / 5</span></label>
+              <select class="fs" id="f-c1-skill" data-candidate="c1">
+                <option value="">+ Add a skill</option>
+                <optgroup label="── IT">
+                  <option>Frontend Development</option><option>Backend Development</option><option>Full Stack Development</option><option>React / Next.js</option><option>Vue.js</option><option>Angular</option><option>Node.js</option><option>Python</option><option>Java</option><option>PHP</option><option>Ruby on Rails</option><option>.NET / C#</option><option>TypeScript</option><option>Swift / iOS</option><option>Kotlin / Android</option><option>Flutter</option><option>React Native</option><option>SQL / Database Admin</option><option>NoSQL / MongoDB</option><option>PostgreSQL</option><option>Cloud Architecture (AWS)</option><option>Cloud Architecture (GCP)</option><option>Cloud Architecture (Azure)</option><option>DevOps / CI-CD</option><option>Docker / Kubernetes</option><option>Cybersecurity</option><option>Network Administration</option><option>System Administration</option><option>Machine Learning / AI</option><option>Data Science</option><option>Data Engineering</option><option>Power BI / Tableau</option><option>Web Analytics (GA4)</option><option>SEO Technical</option><option>WordPress</option><option>Shopify</option><option>Webflow</option><option>Figma / UI Design</option><option>API Integration</option><option>QA / Automation Testing</option><option>Salesforce</option><option>HubSpot CRM</option><option>ERP Systems</option><option>SAP</option><option>IT Project Management</option><option>Blockchain / Web3</option><option>Prompt Engineering / AI</option><option>RPA / Process Automation</option>
+                </optgroup>
+                <optgroup label="── Law">
+                  <option>Immigration Law</option><option>Corporate Law</option><option>Contract Drafting &amp; Review</option><option>Legal Research</option><option>Paralegal Services</option><option>Compliance &amp; Regulatory</option><option>Intellectual Property</option><option>Employment Law</option><option>Family Law</option><option>Real Estate Law</option><option>Criminal Defense Support</option><option>Litigation Support</option><option>Document Review</option><option>Legal Transcription</option><option>Court Filing</option><option>Deposition Summaries</option><option>Case Management</option><option>Discovery &amp; eDiscovery</option><option>FOIA Requests</option><option>Trademark &amp; Copyright</option><option>Patent Research</option><option>Due Diligence</option><option>Contract Management</option><option>Privacy Law / GDPR</option><option>Mergers &amp; Acquisitions</option><option>Bankruptcy Law</option><option>Tax Law</option><option>International Law</option><option>Mediation &amp; Arbitration</option><option>Securities Law</option><option>Healthcare Law</option><option>Environmental Law</option>
+                </optgroup>
+                <optgroup label="── Administration">
+                  <option>Executive Assistance</option><option>Calendar &amp; Schedule Management</option><option>Travel Coordination</option><option>Email Management</option><option>Customer Service</option><option>CRM Management</option><option>Data Entry &amp; Management</option><option>Project Coordination</option><option>Office Management</option><option>HR Support</option><option>Recruitment &amp; Talent Sourcing</option><option>Employee Onboarding</option><option>Payroll Support</option><option>Social Media Management</option><option>Content Creation</option><option>Graphic Design</option><option>Video Editing</option><option>Market Research</option><option>Competitor Analysis</option><option>E-commerce Operations</option><option>Order Fulfillment</option><option>Inventory Management</option><option>Vendor Management</option><option>Event Planning &amp; Coordination</option><option>Transcription</option><option>Presentation Design</option><option>Report Writing</option><option>Cold Outreach</option><option>Lead Generation</option><option>Community Management</option><option>Operations Management</option><option>Process Improvement</option><option>Business Analysis</option>
+                </optgroup>
+                <optgroup label="── Accountant">
+                  <option>Bookkeeping</option><option>Accounts Payable</option><option>Accounts Receivable</option><option>Bank Reconciliation</option><option>Payroll Processing</option><option>Tax Preparation &amp; Filing</option><option>Financial Reporting</option><option>Budgeting &amp; Forecasting</option><option>Cost Analysis</option><option>Audit Support</option><option>QuickBooks</option><option>Xero</option><option>FreshBooks</option><option>Wave Accounting</option><option>Sage</option><option>SAP Finance</option><option>NetSuite</option><option>Excel Financial Modeling</option><option>Cash Flow Management</option><option>Expense Tracking</option><option>VAT / GST Filing</option><option>Fractional CFO Support</option><option>Nonprofit Accounting</option><option>E-commerce Accounting</option><option>GAAP / IFRS Compliance</option><option>Financial Analysis</option><option>Invoice Management</option><option>Subscription Billing</option><option>Revenue Recognition</option><option>Fund Accounting</option><option>Crypto / DeFi Accounting</option><option>Transfer Pricing</option>
+                </optgroup>
+              </select>
+              <div class="skill-chips" id="c1-skills"></div>
+            </div>
           </div>
         </div>
 
@@ -544,6 +580,25 @@
             <div class="fg">
               <label class="fl" for="f-c2u">Ducknowl Interview URL</label>
               <input class="fi" type="url" id="f-c2u" placeholder="https://app.ducknowl.com/...">
+            </div>
+            <div class="fg">
+              <label class="fl">Skills <span class="skill-count" id="c2-skill-count">0 / 5</span></label>
+              <select class="fs" id="f-c2-skill" data-candidate="c2">
+                <option value="">+ Add a skill</option>
+                <optgroup label="── IT">
+                  <option>Frontend Development</option><option>Backend Development</option><option>Full Stack Development</option><option>React / Next.js</option><option>Vue.js</option><option>Angular</option><option>Node.js</option><option>Python</option><option>Java</option><option>PHP</option><option>Ruby on Rails</option><option>.NET / C#</option><option>TypeScript</option><option>Swift / iOS</option><option>Kotlin / Android</option><option>Flutter</option><option>React Native</option><option>SQL / Database Admin</option><option>NoSQL / MongoDB</option><option>PostgreSQL</option><option>Cloud Architecture (AWS)</option><option>Cloud Architecture (GCP)</option><option>Cloud Architecture (Azure)</option><option>DevOps / CI-CD</option><option>Docker / Kubernetes</option><option>Cybersecurity</option><option>Network Administration</option><option>System Administration</option><option>Machine Learning / AI</option><option>Data Science</option><option>Data Engineering</option><option>Power BI / Tableau</option><option>Web Analytics (GA4)</option><option>SEO Technical</option><option>WordPress</option><option>Shopify</option><option>Webflow</option><option>Figma / UI Design</option><option>API Integration</option><option>QA / Automation Testing</option><option>Salesforce</option><option>HubSpot CRM</option><option>ERP Systems</option><option>SAP</option><option>IT Project Management</option><option>Blockchain / Web3</option><option>Prompt Engineering / AI</option><option>RPA / Process Automation</option>
+                </optgroup>
+                <optgroup label="── Law">
+                  <option>Immigration Law</option><option>Corporate Law</option><option>Contract Drafting &amp; Review</option><option>Legal Research</option><option>Paralegal Services</option><option>Compliance &amp; Regulatory</option><option>Intellectual Property</option><option>Employment Law</option><option>Family Law</option><option>Real Estate Law</option><option>Criminal Defense Support</option><option>Litigation Support</option><option>Document Review</option><option>Legal Transcription</option><option>Court Filing</option><option>Deposition Summaries</option><option>Case Management</option><option>Discovery &amp; eDiscovery</option><option>FOIA Requests</option><option>Trademark &amp; Copyright</option><option>Patent Research</option><option>Due Diligence</option><option>Contract Management</option><option>Privacy Law / GDPR</option><option>Mergers &amp; Acquisitions</option><option>Bankruptcy Law</option><option>Tax Law</option><option>International Law</option><option>Mediation &amp; Arbitration</option><option>Securities Law</option><option>Healthcare Law</option><option>Environmental Law</option>
+                </optgroup>
+                <optgroup label="── Administration">
+                  <option>Executive Assistance</option><option>Calendar &amp; Schedule Management</option><option>Travel Coordination</option><option>Email Management</option><option>Customer Service</option><option>CRM Management</option><option>Data Entry &amp; Management</option><option>Project Coordination</option><option>Office Management</option><option>HR Support</option><option>Recruitment &amp; Talent Sourcing</option><option>Employee Onboarding</option><option>Payroll Support</option><option>Social Media Management</option><option>Content Creation</option><option>Graphic Design</option><option>Video Editing</option><option>Market Research</option><option>Competitor Analysis</option><option>E-commerce Operations</option><option>Order Fulfillment</option><option>Inventory Management</option><option>Vendor Management</option><option>Event Planning &amp; Coordination</option><option>Transcription</option><option>Presentation Design</option><option>Report Writing</option><option>Cold Outreach</option><option>Lead Generation</option><option>Community Management</option><option>Operations Management</option><option>Process Improvement</option><option>Business Analysis</option>
+                </optgroup>
+                <optgroup label="── Accountant">
+                  <option>Bookkeeping</option><option>Accounts Payable</option><option>Accounts Receivable</option><option>Bank Reconciliation</option><option>Payroll Processing</option><option>Tax Preparation &amp; Filing</option><option>Financial Reporting</option><option>Budgeting &amp; Forecasting</option><option>Cost Analysis</option><option>Audit Support</option><option>QuickBooks</option><option>Xero</option><option>FreshBooks</option><option>Wave Accounting</option><option>Sage</option><option>SAP Finance</option><option>NetSuite</option><option>Excel Financial Modeling</option><option>Cash Flow Management</option><option>Expense Tracking</option><option>VAT / GST Filing</option><option>Fractional CFO Support</option><option>Nonprofit Accounting</option><option>E-commerce Accounting</option><option>GAAP / IFRS Compliance</option><option>Financial Analysis</option><option>Invoice Management</option><option>Subscription Billing</option><option>Revenue Recognition</option><option>Fund Accounting</option><option>Crypto / DeFi Accounting</option><option>Transfer Pricing</option>
+                </optgroup>
+              </select>
+              <div class="skill-chips" id="c2-skills"></div>
             </div>
           </div>
         </div>
@@ -679,6 +734,16 @@ const flag = code => `https://flagcdn.com/w40/${code}.png`;
 /* ══════════════════════════════════════════════
    EMAIL TEMPLATE BUILDER
 ══════════════════════════════════════════════ */
+function skillPills(arr, accent) {
+  if (!arr || !arr.length) return '';
+  const bg  = accent === 1 ? 'rgba(107,144,128,0.13)' : 'rgba(191,154,82,0.13)';
+  const col = accent === 1 ? '#2E6B5A' : '#8B6914';
+  const pills = arr.map(s =>
+    `<span style="display:inline-block;background-color:${bg};color:${col};font-family:'Inter',-apple-system,sans-serif;font-size:10px;font-weight:700;padding:3px 11px;border-radius:100px;letter-spacing:0.08em;text-transform:uppercase;margin:0 5px 5px 0">${esc(s)}</span>`
+  ).join('');
+  return `<div style="margin-top:11px;line-height:1.2">${pills}</div>`;
+}
+
 function buildEmail(d) {
   return `<!DOCTYPE html>
 <html lang="en" style="font-size:16px;-webkit-font-smoothing:antialiased">
@@ -784,6 +849,7 @@ function buildEmail(d) {
                 <span style="display:inline-block;background-color:#D4E8E2;color:#2E6B5A;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
                   ${esc(d.c1.rate)}
                 </span>
+                ${skillPills(d.c1.skills, 1)}
               </td>
               <!-- Button -->
               <td class="btn-cell" width="148" valign="middle" align="right" style="width:148px;vertical-align:middle;text-align:right">
@@ -825,6 +891,7 @@ function buildEmail(d) {
                 <span style="display:inline-block;background-color:#F0E0C0;color:#8B6914;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
                   ${esc(d.c2.rate)}
                 </span>
+                ${skillPills(d.c2.skills, 2)}
               </td>
               <!-- Button -->
               <td class="btn-cell" width="148" valign="middle" align="right" style="width:148px;vertical-align:middle;text-align:right">
@@ -924,6 +991,37 @@ function buildEmail(d) {
 }
 
 /* ══════════════════════════════════════════════
+   SKILLS STATE
+══════════════════════════════════════════════ */
+const skills = { c1: [], c2: [] };
+
+function addSkill(candidate, sel) {
+  const skill = sel.value;
+  sel.value = '';
+  if (!skill) return;
+  if (skills[candidate].includes(skill)) { toast('Skill already added.', 'err'); return; }
+  if (skills[candidate].length >= 5) { toast('Maximum 5 skills per candidate.', 'err'); return; }
+  skills[candidate].push(skill);
+  renderChips(candidate);
+  schedulePreview();
+}
+
+function removeSkill(candidate, skill) {
+  skills[candidate] = skills[candidate].filter(s => s !== skill);
+  renderChips(candidate);
+  schedulePreview();
+}
+
+function renderChips(candidate) {
+  const wrap  = $(`${candidate}-skills`);
+  const count = $(`${candidate}-skill-count`);
+  count.textContent = `${skills[candidate].length} / 5`;
+  wrap.innerHTML = skills[candidate].map(s =>
+    `<span class="skill-chip">${s}<button class="skill-rm" data-c="${candidate}" data-s="${s}" title="Remove">&times;</button></span>`
+  ).join('');
+}
+
+/* ══════════════════════════════════════════════
    FORM DATA
 ══════════════════════════════════════════════ */
 function getData() {
@@ -946,6 +1044,7 @@ function getData() {
       exp:         val('f-c1e')  || 'Years Experience',
       rate:        val('f-c1r')  || 'US$ —',
       url:         val('f-c1u')  || '#',
+      skills:      [...skills.c1],
     },
     c2: {
       initials:    (val('f-c2i') || 'C2').toUpperCase(),
@@ -955,6 +1054,7 @@ function getData() {
       exp:         val('f-c2e')  || 'Years Experience',
       rate:        val('f-c2r')  || 'US$ —',
       url:         val('f-c2u')  || '#',
+      skills:      [...skills.c2],
     },
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
@@ -1037,6 +1137,9 @@ function resetForm() {
   $('f-c2c').value = 'br';
   $('fi1').src = flag('br');
   $('fi2').src = flag('br');
+  skills.c1 = []; skills.c2 = [];
+  renderChips('c1'); renderChips('c2');
+  $('f-c1-skill').value = ''; $('f-c2-skill').value = '';
   updatePreview();
   toast('Form cleared.', 'ok');
 }
@@ -1078,6 +1181,16 @@ function showApp() {
   // All form inputs trigger preview
   document.querySelectorAll('.fi, .fta, .fs').forEach(el => {
     el.addEventListener('input', schedulePreview);
+  });
+
+  // Skill selects
+  $('f-c1-skill').addEventListener('change', function() { addSkill('c1', this); });
+  $('f-c2-skill').addEventListener('change', function() { addSkill('c2', this); });
+
+  // Skill chip remove — event delegation
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.skill-rm');
+    if (btn) removeSkill(btn.dataset.c, btn.dataset.s);
   });
 
   updatePreview();
