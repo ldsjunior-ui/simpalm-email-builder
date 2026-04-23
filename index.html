@@ -196,6 +196,15 @@
 
     /* Skill selector */
     .skill-count { font-weight: 400; color: var(--muted); font-size: 10px; margin-left: 4px; }
+    .custom-skill-wrap { display: flex; gap: 6px; align-items: center; }
+    .custom-skill-wrap .fi { flex: 1; }
+    .custom-skill-add {
+      flex-shrink: 0; height: 37px; padding: 0 12px;
+      background: var(--dark); color: #fff; border: none; border-radius: 6px;
+      font-size: 18px; font-weight: 300; cursor: pointer; transition: background .18s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .custom-skill-add:hover { background: #2c3e55; }
     .skill-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; min-height: 0; }
     .skill-chip {
       display: inline-flex; align-items: center; gap: 3px;
@@ -540,6 +549,14 @@
               </select>
               <div class="skill-chips" id="c1-skills"></div>
             </div>
+            <div class="fg">
+              <label class="fl">Custom Skills <span class="skill-count" id="c1-custom-count">0 / 10</span></label>
+              <div class="custom-skill-wrap">
+                <input class="fi" type="text" id="f-c1-custom" placeholder="Type any skill & press Enter">
+                <button class="custom-skill-add" id="btn-c1-add" title="Add skill">+</button>
+              </div>
+              <div class="skill-chips" id="c1-custom-chips"></div>
+            </div>
           </div>
         </div>
 
@@ -599,6 +616,14 @@
                 </optgroup>
               </select>
               <div class="skill-chips" id="c2-skills"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Custom Skills <span class="skill-count" id="c2-custom-count">0 / 10</span></label>
+              <div class="custom-skill-wrap">
+                <input class="fi" type="text" id="f-c2-custom" placeholder="Type any skill & press Enter">
+                <button class="custom-skill-add" id="btn-c2-add" title="Add skill">+</button>
+              </div>
+              <div class="skill-chips" id="c2-custom-chips"></div>
             </div>
           </div>
         </div>
@@ -991,6 +1016,34 @@ function buildEmail(d) {
    SKILLS STATE
 ══════════════════════════════════════════════ */
 const skills = { c1: [], c2: [] };
+const customSkills = { c1: [], c2: [] };
+
+function addCustomSkill(candidate) {
+  const inp = $(`f-${candidate}-custom`);
+  const val = inp.value.trim();
+  inp.value = '';
+  if (!val) return;
+  if (customSkills[candidate].includes(val)) { toast('Skill already added.', 'err'); return; }
+  if (customSkills[candidate].length >= 10) { toast('Maximum 10 custom skills per candidate.', 'err'); return; }
+  customSkills[candidate].push(val);
+  renderCustomChips(candidate);
+  schedulePreview();
+}
+
+function removeCustomSkill(candidate, skill) {
+  customSkills[candidate] = customSkills[candidate].filter(s => s !== skill);
+  renderCustomChips(candidate);
+  schedulePreview();
+}
+
+function renderCustomChips(candidate) {
+  const wrap  = $(`${candidate}-custom-chips`);
+  const count = $(`${candidate}-custom-count`);
+  count.textContent = `${customSkills[candidate].length} / 10`;
+  wrap.innerHTML = customSkills[candidate].map(s =>
+    `<span class="skill-chip">${s}<button class="skill-rm" data-c="${candidate}" data-s="${s}" data-custom="1" title="Remove">&times;</button></span>`
+  ).join('');
+}
 
 function addSkill(candidate, sel) {
   const skill = sel.value;
@@ -1041,7 +1094,7 @@ function getData() {
       exp:         val('f-c1e')  || 'Years Experience',
       rate:        val('f-c1r')  || 'US$ —',
       url:         val('f-c1u')  || '#',
-      skills:      [...skills.c1],
+      skills:      [...skills.c1, ...customSkills.c1],
     },
     c2: {
       initials:    (val('f-c2i') || 'C2').toUpperCase(),
@@ -1051,7 +1104,7 @@ function getData() {
       exp:         val('f-c2e')  || 'Years Experience',
       rate:        val('f-c2r')  || 'US$ —',
       url:         val('f-c2u')  || '#',
-      skills:      [...skills.c2],
+      skills:      [...skills.c2, ...customSkills.c2],
     },
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
@@ -1135,8 +1188,11 @@ function resetForm() {
   $('fi1').src = flag('br');
   $('fi2').src = flag('br');
   skills.c1 = []; skills.c2 = [];
+  customSkills.c1 = []; customSkills.c2 = [];
   renderChips('c1'); renderChips('c2');
+  renderCustomChips('c1'); renderCustomChips('c2');
   $('f-c1-skill').value = ''; $('f-c2-skill').value = '';
+  $('f-c1-custom').value = ''; $('f-c2-custom').value = '';
   updatePreview();
   toast('Form cleared.', 'ok');
 }
@@ -1184,10 +1240,17 @@ function showApp() {
   $('f-c1-skill').addEventListener('change', function() { addSkill('c1', this); });
   $('f-c2-skill').addEventListener('change', function() { addSkill('c2', this); });
 
-  // Skill chip remove — event delegation
+  // Skill chip remove — event delegation (predefined + custom)
   document.addEventListener('click', e => {
     const btn = e.target.closest('.skill-rm');
-    if (btn) removeSkill(btn.dataset.c, btn.dataset.s);
+    if (!btn) return;
+    btn.dataset.custom ? removeCustomSkill(btn.dataset.c, btn.dataset.s) : removeSkill(btn.dataset.c, btn.dataset.s);
+  });
+
+  // Custom skill inputs — Enter key or + button
+  ['c1','c2'].forEach(c => {
+    $(`f-${c}-custom`).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSkill(c); } });
+    $(`btn-${c}-add`).addEventListener('click', () => addCustomSkill(c));
   });
 
   updatePreview();
