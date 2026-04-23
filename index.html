@@ -416,51 +416,91 @@
     }
     .cv-block > .fl { color: var(--dark); font-size: 10.5px; letter-spacing: .06em; }
 
-    .cv-link-row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
+    /* ── CV Search ── */
+    .cv-search-wrap { position: relative; }
+    .cv-search-inp {
+      width: 100%;
+      font-size: 12px;
+      padding-left: 30px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 9px center;
+      background-size: 13px;
+      box-sizing: border-box;
     }
-    .cv-link-row .fi { flex: 1; font-size: 12px; }
+    .cv-results {
+      display: none;
+      position: absolute;
+      left: 0; right: 0;
+      top: calc(100% + 3px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 6px 16px rgba(0,0,0,.22);
+      z-index: 200;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .cv-result-item {
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    .cv-result-item:last-child { border-bottom: none; }
+    .cv-result-item:hover { background: var(--card-alt); }
+    .cv-ri-name  { display: block; font-size: 12px; font-weight: 600; color: var(--dark); }
+    .cv-ri-title { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .cv-or-row {
+    .cv-chip {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 2px;
+      gap: 7px;
+      background: var(--dark);
+      border-radius: 6px;
+      padding: 6px 9px;
     }
-    .cv-or-label {
-      font-size: 10px;
-      color: var(--muted);
-      white-space: nowrap;
-      font-style: italic;
-    }
-    .cv-registry-sel {
+    .cv-chip-name {
       flex: 1;
-      font-size: 11.5px;
-      padding: 6px 28px 6px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+    .btn-clear-cv {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.55);
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color .15s;
+    }
+    .btn-clear-cv:hover { color: #fff; }
 
     .btn-view-cv {
       flex-shrink: 0;
-      height: 37px;
-      padding: 0 11px;
-      background: var(--dark);
+      height: 28px;
+      padding: 0 9px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
       color: #fff;
-      border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       font-family: 'Inter', sans-serif;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
-      transition: background .18s, opacity .18s;
+      transition: background .15s;
       display: flex;
       align-items: center;
       gap: 4px;
     }
-    .btn-view-cv:hover:not(:disabled) { background: #2c3e55; }
-    .btn-view-cv:disabled { opacity: .35; cursor: default; }
+    .btn-view-cv:hover { background: rgba(255,255,255,.28); }
 
     /* ══════════════════════════════════════
        CV PIPELINE MONITOR
@@ -877,16 +917,19 @@
             <!-- CV PROFILE -->
             <div class="fg cv-block">
               <label class="fl">CV File</label>
-              <div class="cv-link-row">
-                <input class="fi" type="url" id="f-c1-cv-url" placeholder="Paste OneDrive, Google Drive or PDF URL…">
-                <button class="btn-view-cv" id="btn-c1-cv" disabled>&#128196; View CV</button>
+              <div class="cv-search-wrap">
+                <input class="fi cv-search-inp" type="text" id="f-c1-cv-search"
+                       placeholder="Search candidate by name…" autocomplete="off">
+                <div class="cv-results" id="f-c1-cv-results"></div>
               </div>
-              <div class="cv-or-row">
-                <span class="cv-or-label">or pick from repo</span>
-                <select class="fs cv-registry-sel" id="f-c1-cv-registry">
-                  <option value="">Loading…</option>
-                </select>
+              <div class="cv-chip" id="f-c1-cv-chip" style="display:none">
+                <span class="cv-chip-name" id="f-c1-cv-chip-name"></span>
+                <button class="btn-view-cv" id="btn-c1-cv">&#128196; View CV</button>
+                <button class="btn-clear-cv" id="btn-c1-cv-clear" title="Clear selection">&#10005;</button>
               </div>
+              <select id="f-c1-cv-registry" style="display:none">
+                <option value="">Loading…</option>
+              </select>
             </div>
 
             <div class="fg">
@@ -961,16 +1004,19 @@
             <!-- CV PROFILE -->
             <div class="fg cv-block">
               <label class="fl">CV File</label>
-              <div class="cv-link-row">
-                <input class="fi" type="url" id="f-c2-cv-url" placeholder="Paste OneDrive, Google Drive or PDF URL…">
-                <button class="btn-view-cv" id="btn-c2-cv" disabled>&#128196; View CV</button>
+              <div class="cv-search-wrap">
+                <input class="fi cv-search-inp" type="text" id="f-c2-cv-search"
+                       placeholder="Search candidate by name…" autocomplete="off">
+                <div class="cv-results" id="f-c2-cv-results"></div>
               </div>
-              <div class="cv-or-row">
-                <span class="cv-or-label">or pick from repo</span>
-                <select class="fs cv-registry-sel" id="f-c2-cv-registry">
-                  <option value="">Loading…</option>
-                </select>
+              <div class="cv-chip" id="f-c2-cv-chip" style="display:none">
+                <span class="cv-chip-name" id="f-c2-cv-chip-name"></span>
+                <button class="btn-view-cv" id="btn-c2-cv">&#128196; View CV</button>
+                <button class="btn-clear-cv" id="btn-c2-cv-clear" title="Clear selection">&#10005;</button>
               </div>
+              <select id="f-c2-cv-registry" style="display:none">
+                <option value="">Loading…</option>
+              </select>
             </div>
 
             <div class="fg">
@@ -1669,25 +1715,17 @@ let cvIndex = [];
 
 // Returns a full entry object { previewUrl, downloadUrl, label } or null
 function getCvEntry(candidate) {
-  const manual = ($(`f-${candidate}-cv-url`)?.value || '').trim();
-  if (manual) {
-    return {
-      previewUrl:  manual,
-      downloadUrl: manual,
-      label: decodeURIComponent(manual.split('/').pop().split('?')[0]),
-    };
-  }
   const reg = ($(`f-${candidate}-cv-registry`)?.value || '').trim();
   if (!reg) return null;
   const entry = cvIndex.find(e => e.filename === reg);
   if (entry) return {
-    previewUrl:  entry.drivePreviewUrl  || (CV_RAW_BASE + reg),
-    downloadUrl: entry.driveDownloadUrl || (CV_RAW_BASE + reg),
+    previewUrl:  entry.drivePreviewUrl  || (CV_RAW_BASE + encodeURIComponent(reg)),
+    downloadUrl: entry.driveDownloadUrl || (CV_RAW_BASE + encodeURIComponent(reg)),
     label:       entry.name || reg.replace(' - CV Simpalm Staffing.pdf', ''),
   };
   return {
-    previewUrl:  CV_RAW_BASE + reg,
-    downloadUrl: CV_RAW_BASE + reg,
+    previewUrl:  CV_RAW_BASE + encodeURIComponent(reg),
+    downloadUrl: CV_RAW_BASE + encodeURIComponent(reg),
     label: reg.replace(' - CV Simpalm Staffing.pdf', ''),
   };
 }
@@ -1705,26 +1743,61 @@ function getCvShareUrl(candidate) {
 }
 
 function setupCvBlock(candidate) {
-  const urlInp = $(`f-${candidate}-cv-url`);
-  const regSel = $(`f-${candidate}-cv-registry`);
-  const btn    = $(`btn-${candidate}-cv`);
+  const searchInp = $(`f-${candidate}-cv-search`);
+  const regSel    = $(`f-${candidate}-cv-registry`);
+  const results   = $(`f-${candidate}-cv-results`);
+  const chip      = $(`f-${candidate}-cv-chip`);
+  const chipName  = $(`f-${candidate}-cv-chip-name`);
+  const viewBtn   = $(`btn-${candidate}-cv`);
+  const clearBtn  = $(`btn-${candidate}-cv-clear`);
 
-  const refresh = () => {
-    const url = getCvUrl(candidate);
-    btn.disabled = !url;
+  function renderResults(q) {
+    const ql = (q || '').toLowerCase();
+    const matches = ql.length
+      ? cvIndex.filter(cv =>
+          (cv.name  || '').toLowerCase().includes(ql) ||
+          (cv.title || '').toLowerCase().includes(ql))
+      : cvIndex.slice(); // show all when input is focused but empty
+
+    if (!matches.length) { results.style.display = 'none'; results.innerHTML = ''; return; }
+
+    results.innerHTML = '';
+    matches.forEach(cv => {
+      const item = document.createElement('div');
+      item.className = 'cv-result-item';
+      item.innerHTML =
+        `<span class="cv-ri-name">${cv.name}</span>` +
+        (cv.title ? `<span class="cv-ri-title">${cv.title}</span>` : '');
+      item.addEventListener('mousedown', e => { e.preventDefault(); pickCandidate(cv); });
+      results.appendChild(item);
+    });
+    results.style.display = 'block';
+  }
+
+  function pickCandidate(cv) {
+    regSel.value       = cv.filename;
+    chipName.textContent = cv.name;
+    chip.style.display  = 'flex';
+    searchInp.style.display = 'none';
+    results.style.display   = 'none';
+    results.innerHTML        = '';
     schedulePreview();
-    // If user picks from Drive registry, clear the manual URL field
-    if (regSel === document.activeElement && regSel.value) urlInp.value = '';
-    // If user types a URL, reset the registry selector
-    if (urlInp === document.activeElement && urlInp.value) regSel.value = '';
-  };
+  }
 
-  urlInp.addEventListener('input', refresh);
-  regSel.addEventListener('change', refresh);
-  btn.addEventListener('click', () => {
-    const entry = getCvEntry(candidate);
-    if (entry) openPdfModal(entry);
-  });
+  function clearSelection() {
+    regSel.value            = '';
+    chip.style.display      = 'none';
+    searchInp.style.display = '';
+    searchInp.value         = '';
+    searchInp.focus();
+    schedulePreview();
+  }
+
+  searchInp.addEventListener('focus', () => renderResults(searchInp.value));
+  searchInp.addEventListener('input', () => renderResults(searchInp.value));
+  searchInp.addEventListener('blur',  () => setTimeout(() => { results.style.display = 'none'; }, 160));
+  viewBtn.addEventListener('click',   () => { const e = getCvEntry(candidate); if (e) openPdfModal(e); });
+  clearBtn.addEventListener('click',  clearSelection);
 }
 
 async function loadCvIndex() {
@@ -1737,12 +1810,11 @@ async function loadCvIndex() {
   } catch {
     cvIndex = [];
   }
+  // Populate hidden <select> for value-tracking; visible search box reads cvIndex directly
   ['c1','c2'].forEach(c => {
     const sel = $(`f-${c}-cv-registry`);
     if (!sel) return;
-    sel.innerHTML = cvIndex.length
-      ? '<option value="">— pick from Drive —</option>'
-      : '<option value="">No CVs in Drive yet</option>';
+    sel.innerHTML = '<option value=""></option>';
     cvIndex.forEach(cv => {
       const o = document.createElement('option');
       o.value = cv.filename;
@@ -1887,21 +1959,21 @@ async function loadPipelineStatus() {
     _plPollTimer = null;
   }
 
-  // Also refresh the CV picker dropdowns
+  // Also refresh the CV index (search reads cvIndex directly; hidden select for value-tracking)
   if (processed.length) {
     cvIndex = processed;
     ['c1','c2'].forEach(c => {
       const sel = $(`f-${c}-cv-registry`);
       if (!sel) return;
       const prev = sel.value;
-      sel.innerHTML = '<option value="">— pick from Drive —</option>';
+      sel.innerHTML = '<option value=""></option>';
       processed.forEach(cv => {
         const o = document.createElement('option');
         o.value = cv.filename;
         o.textContent = cv.name;
         sel.appendChild(o);
       });
-      if (prev) sel.value = prev;
+      if (prev) sel.value = prev; // restore selection after index refresh
     });
   }
 }
