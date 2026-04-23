@@ -462,6 +462,153 @@
     .btn-view-cv:hover:not(:disabled) { background: #2c3e55; }
     .btn-view-cv:disabled { opacity: .35; cursor: default; }
 
+    /* ══════════════════════════════════════
+       CV PIPELINE MONITOR
+    ══════════════════════════════════════ */
+    .pl-sec {
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .pl-head {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-lt);
+      background: #fafaf8;
+    }
+    .pl-head-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--mid);
+      flex: 1;
+    }
+    .pl-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Refresh / Trigger buttons inside the panel header */
+    .pl-btn {
+      height: 28px;
+      padding: 0 10px;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .16s, opacity .16s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pl-btn-refresh {
+      background: var(--bg);
+      color: var(--mid);
+      border: 1px solid var(--border);
+    }
+    .pl-btn-refresh:hover { background: var(--border); }
+    .pl-btn-trigger {
+      background: var(--green);
+      color: #fff;
+    }
+    .pl-btn-trigger:hover { background: var(--green-dark); }
+    .pl-btn-trigger:disabled { opacity: .4; cursor: default; }
+    .pl-btn-trigger.spinning { opacity: .7; cursor: wait; }
+
+    /* Spinning icon while triggering */
+    @keyframes pl-spin { to { transform: rotate(360deg); } }
+    .pl-spin-icon { display: inline-block; animation: pl-spin .7s linear infinite; }
+
+    /* CV list inside the panel */
+    .pl-body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+
+    .pl-empty {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .pl-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--card);
+      border: 1px solid var(--border-lt);
+    }
+    .pl-icon { font-size: 15px; flex-shrink: 0; line-height: 1.3; }
+    .pl-info { flex: 1; min-width: 0; }
+    .pl-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pl-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .pl-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 100px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .pl-badge-ready   { background: #d4edda; color: #1a5c2a; }
+    .pl-badge-pending { background: #fff3cd; color: #7a5000; }
+    .pl-badge-new     { background: var(--green-lt); color: var(--green-dark); }
+
+    .pl-est {
+      font-size: 10px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .pl-link {
+      font-size: 10px;
+      color: var(--green);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .pl-link:hover { text-decoration: underline; }
+
+    /* Pulsing dot for "processing" */
+    @keyframes pl-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .pl-pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+                background: var(--gold); animation: pl-pulse 1.3s ease-in-out infinite;
+                margin-right: 3px; vertical-align: middle; }
+
+    .pl-footer {
+      font-size: 9.5px;
+      color: var(--muted);
+      text-align: right;
+      padding: 4px 10px 6px;
+      border-top: 1px solid var(--border-lt);
+    }
+
     .cv-status {
       font-size: 10px;
       color: var(--muted);
@@ -645,6 +792,21 @@
     <!-- ── SIDEBAR ── -->
     <aside class="sidebar">
       <div class="sidebar-inner">
+
+        <!-- ══ CV PIPELINE MONITOR ══ -->
+        <div class="pl-sec" id="pl-sec">
+          <div class="pl-head">
+            <span class="pl-head-title">📂 CV Pipeline</span>
+            <div class="pl-actions">
+              <button class="pl-btn pl-btn-refresh" id="pl-btn-refresh" title="Refresh status">⟳ Refresh</button>
+              <button class="pl-btn pl-btn-trigger" id="pl-btn-trigger" title="Manually trigger processing">⚡ Trigger Now</button>
+            </div>
+          </div>
+          <div class="pl-body" id="pl-body">
+            <div class="pl-empty" id="pl-empty">Loading pipeline status…</div>
+          </div>
+          <div class="pl-footer" id="pl-footer">Last checked: —</div>
+        </div>
 
         <!-- GENERAL -->
         <div class="fsec">
@@ -1492,6 +1654,7 @@ function showApp() {
   setupCvBlock('c2');
   updatePreview();
   loadCvIndex();
+  loadPipelineStatus();
 }
 
 /* ══════════════════════════════════════════════
@@ -1588,6 +1751,198 @@ async function loadCvIndex() {
     });
   });
 }
+
+/* ══════════════════════════════════════════════
+   CV PIPELINE MONITOR
+══════════════════════════════════════════════ */
+
+let _plPollTimer  = null;   // interval handle while processing
+let _plTriggeredAt = null;  // timestamp of last manual trigger
+
+// How long GitHub Actions typically takes (ms) — shown as estimated wait
+const PL_ESTIMATE_MS = 2.5 * 60 * 1000;  // 2.5 min
+
+function _plNow()   { return new Date(); }
+function _plFmt(d)  {
+  if (!d) return '—';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function _plAgo(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 60000) return 'just now';
+  const m = Math.round(ms / 60000);
+  return `${m} min ago`;
+}
+function _plEtaStr(uploadedIso) {
+  const elapsed = Date.now() - new Date(uploadedIso).getTime();
+  const remaining = PL_ESTIMATE_MS - elapsed;
+  if (remaining <= 0) return 'any moment now';
+  const m = Math.ceil(remaining / 60000);
+  return `~${m} min remaining`;
+}
+
+async function loadPipelineStatus() {
+  const body    = $('pl-body');
+  const footer  = $('pl-footer');
+  const emptyEl = $('pl-empty');
+
+  // ── Fetch status ──────────────────────────────────────────────
+  let uploaded  = [];
+  let processed = [];
+  let ts        = null;
+
+  if (CV_DRIVE_INDEX_URL) {
+    // Full status from Apps Script
+    try {
+      const res  = await fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now());
+      const data = await res.json();
+      uploaded   = data.uploaded  || [];
+      processed  = data.processed || [];
+      ts         = data.ts ? new Date(data.ts) : _plNow();
+    } catch {
+      // fall through to GitHub-only mode
+    }
+  }
+
+  if (!uploaded.length && !processed.length) {
+    // Fallback: just show GitHub processed index
+    processed = cvIndex;   // already loaded by loadCvIndex()
+  }
+
+  // ── Build items ───────────────────────────────────────────────
+  // Map processed filenames for quick lookup
+  const procMap = {};
+  processed.forEach(p => { procMap[p.filename] = p; });
+
+  const items = [];
+
+  // Processed CVs (may not be in uploaded list if Drive data unavailable)
+  processed.forEach(p => {
+    const viewUrl = p.drivePreviewUrl || (CV_RAW_BASE + encodeURIComponent(p.filename));
+    items.push({ status: 'ready', name: p.name, filename: p.filename,
+                 ts: p.processed, viewUrl });
+  });
+
+  // Uploaded but NOT yet processed
+  uploaded.forEach(u => {
+    const alreadyIn = items.some(i => i.filename &&
+      i.filename.toLowerCase().includes(
+        u.name.replace(/\.(pdf|docx?)$/i,'').toLowerCase().trim().split(/\s+/).slice(0,2).join(' ').toLowerCase()
+      ));
+    if (!alreadyIn) {
+      items.push({ status: 'pending', name: u.name, ts: u.created });
+    }
+  });
+
+  // ── Render ────────────────────────────────────────────────────
+  const hasPending = items.some(i => i.status === 'pending');
+
+  if (!items.length) {
+    body.innerHTML = '<div class="pl-empty">No CVs in the Drive folder yet.</div>';
+  } else {
+    body.innerHTML = '';
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'pl-item';
+
+      if (item.status === 'ready') {
+        row.innerHTML = `
+          <span class="pl-icon">✅</span>
+          <div class="pl-info">
+            <div class="pl-name">${item.name}</div>
+            <div class="pl-meta">
+              <span class="pl-badge pl-badge-ready">Ready</span>
+              <span class="pl-est">${_plAgo(item.ts)}</span>
+              ${item.viewUrl
+                ? `<a class="pl-link" href="${item.viewUrl}" target="_blank" rel="noopener">View PDF →</a>`
+                : ''}
+            </div>
+          </div>`;
+      } else {
+        const eta = _plEtaStr(item.ts);
+        row.innerHTML = `
+          <span class="pl-icon">⏳</span>
+          <div class="pl-info">
+            <div class="pl-name">${item.name}</div>
+            <div class="pl-meta">
+              <span class="pl-pulse"></span>
+              <span class="pl-badge pl-badge-pending">Processing</span>
+              <span class="pl-est">${eta}</span>
+            </div>
+          </div>`;
+      }
+      body.appendChild(row);
+    });
+  }
+
+  if (ts) footer.textContent = `Last checked: ${_plFmt(ts)}`;
+
+  // ── Auto-poll while there are pending CVs ────────────────────
+  if (hasPending) {
+    if (!_plPollTimer) {
+      _plPollTimer = setInterval(loadPipelineStatus, 30_000);
+    }
+  } else {
+    clearInterval(_plPollTimer);
+    _plPollTimer = null;
+  }
+
+  // Also refresh the CV picker dropdowns
+  if (processed.length) {
+    cvIndex = processed;
+    ['c1','c2'].forEach(c => {
+      const sel = $(`f-${c}-cv-registry`);
+      if (!sel) return;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">— pick from Drive —</option>';
+      processed.forEach(cv => {
+        const o = document.createElement('option');
+        o.value = cv.filename;
+        o.textContent = cv.name;
+        sel.appendChild(o);
+      });
+      if (prev) sel.value = prev;
+    });
+  }
+}
+
+async function triggerPipeline() {
+  const btn = $('pl-btn-trigger');
+  if (!CV_DRIVE_INDEX_URL) {
+    toast('⚠️ Apps Script Web App not configured yet — see setup instructions.');
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Triggering…';
+  _plTriggeredAt = Date.now();
+
+  try {
+    const res  = await fetch(CV_DRIVE_INDEX_URL + '?action=trigger&t=' + Date.now());
+    const data = await res.json();
+    if (data.ok) {
+      toast('⚡ Pipeline triggered! PDF will be ready in ~2–3 min.');
+      // Start polling every 30s
+      clearInterval(_plPollTimer);
+      _plPollTimer = setInterval(loadPipelineStatus, 30_000);
+      await loadPipelineStatus();
+    } else {
+      toast('❌ Trigger failed: ' + (data.error || 'unknown error'), 'err');
+    }
+  } catch (err) {
+    toast('❌ Could not reach Apps Script: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '⚡ Trigger Now';
+}
+
+// Wire up buttons
+document.addEventListener('DOMContentLoaded', () => {
+  const rBtn = $('pl-btn-refresh');
+  const tBtn = $('pl-btn-trigger');
+  if (rBtn) rBtn.addEventListener('click', () => { loadPipelineStatus(); });
+  if (tBtn) tBtn.addEventListener('click', () => { triggerPipeline(); });
+});
 
 /* ══════════════════════════════════════════════
    PDF MODAL (PDF.js)
