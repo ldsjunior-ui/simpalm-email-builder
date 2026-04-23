@@ -406,13 +406,40 @@
     .toast.ok  { border-left: 3px solid var(--green); }
     .toast.err { border-left: 3px solid #c0392b; }
 
-    /* ── CV Picker ── */
-    .cv-picker-wrap {
+    /* ── CV Block ── */
+    .cv-block {
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 11px;
+      gap: 8px !important;
+    }
+    .cv-block > .fl { color: var(--dark); font-size: 10.5px; letter-spacing: .06em; }
+
+    .cv-link-row {
       display: flex;
       gap: 6px;
       align-items: center;
     }
-    .cv-picker-wrap .fs { flex: 1; }
+    .cv-link-row .fi { flex: 1; font-size: 12px; }
+
+    .cv-or-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .cv-or-label {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+      font-style: italic;
+    }
+    .cv-registry-sel {
+      flex: 1;
+      font-size: 11.5px;
+      padding: 6px 28px 6px 8px;
+    }
 
     .btn-view-cv {
       flex-shrink: 0;
@@ -684,6 +711,22 @@
               <label class="fl" for="f-c1u">Ducknowl Interview URL</label>
               <input class="fi" type="url" id="f-c1u" placeholder="https://app.ducknowl.com/...">
             </div>
+
+            <!-- CV PROFILE -->
+            <div class="fg cv-block">
+              <label class="fl">CV File</label>
+              <div class="cv-link-row">
+                <input class="fi" type="url" id="f-c1-cv-url" placeholder="Paste OneDrive, Google Drive or PDF URL…">
+                <button class="btn-view-cv" id="btn-c1-cv" disabled>&#128196; View CV</button>
+              </div>
+              <div class="cv-or-row">
+                <span class="cv-or-label">or pick from repo</span>
+                <select class="fs cv-registry-sel" id="f-c1-cv-registry">
+                  <option value="">Loading…</option>
+                </select>
+              </div>
+            </div>
+
             <div class="fg">
               <label class="fl">Skills <span class="skill-count" id="c1-skill-count">0 / 5</span></label>
               <select class="fs" id="f-c1-skill" data-candidate="c1">
@@ -710,14 +753,6 @@
                 <button class="custom-skill-add" id="btn-c1-add" title="Add skill">+</button>
               </div>
               <div class="skill-chips" id="c1-custom-chips"></div>
-            </div>
-            <div class="fg">
-              <label class="fl">CV Profile</label>
-              <div class="cv-picker-wrap">
-                <select class="fs" id="f-c1-cv"><option value="">No CV selected</option></select>
-                <button class="btn-view-cv" id="btn-c1-cv" disabled title="Open CV viewer">&#128196; View CV</button>
-              </div>
-              <div class="cv-status" id="c1-cv-status"></div>
             </div>
           </div>
         </div>
@@ -760,6 +795,22 @@
               <label class="fl" for="f-c2u">Ducknowl Interview URL</label>
               <input class="fi" type="url" id="f-c2u" placeholder="https://app.ducknowl.com/...">
             </div>
+
+            <!-- CV PROFILE -->
+            <div class="fg cv-block">
+              <label class="fl">CV File</label>
+              <div class="cv-link-row">
+                <input class="fi" type="url" id="f-c2-cv-url" placeholder="Paste OneDrive, Google Drive or PDF URL…">
+                <button class="btn-view-cv" id="btn-c2-cv" disabled>&#128196; View CV</button>
+              </div>
+              <div class="cv-or-row">
+                <span class="cv-or-label">or pick from repo</span>
+                <select class="fs cv-registry-sel" id="f-c2-cv-registry">
+                  <option value="">Loading…</option>
+                </select>
+              </div>
+            </div>
+
             <div class="fg">
               <label class="fl">Skills <span class="skill-count" id="c2-skill-count">0 / 5</span></label>
               <select class="fs" id="f-c2-skill" data-candidate="c2">
@@ -786,14 +837,6 @@
                 <button class="custom-skill-add" id="btn-c2-add" title="Add skill">+</button>
               </div>
               <div class="skill-chips" id="c2-custom-chips"></div>
-            </div>
-            <div class="fg">
-              <label class="fl">CV Profile</label>
-              <div class="cv-picker-wrap">
-                <select class="fs" id="f-c2-cv"><option value="">No CV selected</option></select>
-                <button class="btn-view-cv" id="btn-c2-cv" disabled title="Open CV viewer">&#128196; View CV</button>
-              </div>
-              <div class="cv-status" id="c2-cv-status"></div>
             </div>
           </div>
         </div>
@@ -1285,7 +1328,7 @@ function getData() {
       rate:        val('f-c1r')  || 'US$ —',
       url:         val('f-c1u')  || '#',
       skills:      [...skills.c1, ...customSkills.c1],
-      cvUrl:       selectedCv.c1 ? CV_RAW_BASE + selectedCv.c1 : '',
+      cvUrl:       getCvUrl('c1'),
     },
     c2: {
       initials:    (val('f-c2i') || 'C2').toUpperCase(),
@@ -1296,7 +1339,7 @@ function getData() {
       rate:        val('f-c2r')  || 'US$ —',
       url:         val('f-c2u')  || '#',
       skills:      [...skills.c2, ...customSkills.c2],
-      cvUrl:       selectedCv.c2 ? CV_RAW_BASE + selectedCv.c2 : '',
+      cvUrl:       getCvUrl('c2'),
     },
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
@@ -1445,6 +1488,8 @@ function showApp() {
     $(`btn-${c}-add`).addEventListener('click', () => addCustomSkill(c));
   });
 
+  setupCvBlock('c1');
+  setupCvBlock('c2');
   updatePreview();
   loadCvIndex();
 }
@@ -1456,55 +1501,67 @@ const CV_INDEX_URL = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-
 const CV_RAW_BASE  = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/processed/';
 
 let cvIndex = [];
-const selectedCv = { c1: null, c2: null };
+
+// Returns the active CV URL for a candidate (URL input wins over registry)
+function getCvUrl(candidate) {
+  const manual = ($(`f-${candidate}-cv-url`)?.value || '').trim();
+  if (manual) return manual;
+  const reg = ($(`f-${candidate}-cv-registry`)?.value || '').trim();
+  return reg ? CV_RAW_BASE + reg : '';
+}
+
+function setupCvBlock(candidate) {
+  const urlInp = $(`f-${candidate}-cv-url`);
+  const regSel = $(`f-${candidate}-cv-registry`);
+  const btn    = $(`btn-${candidate}-cv`);
+
+  const refresh = () => {
+    const url = getCvUrl(candidate);
+    btn.disabled = !url;
+    schedulePreview();
+    // If user picks from registry, clear the manual URL field
+    if (regSel === document.activeElement && regSel.value) urlInp.value = '';
+    // If user types a URL, reset the registry selector
+    if (urlInp === document.activeElement && urlInp.value) regSel.value = '';
+  };
+
+  urlInp.addEventListener('input', refresh);
+  regSel.addEventListener('change', refresh);
+  btn.addEventListener('click', () => {
+    const url = getCvUrl(candidate);
+    if (url) openPdfModal(url, candidate);
+  });
+}
 
 async function loadCvIndex() {
-  ['c1','c2'].forEach(c => {
-    $(`c${c.slice(1)}-cv-status`).textContent = 'Loading CVs…';
-  });
   try {
     const res = await fetch(CV_INDEX_URL + '?t=' + Date.now());
     if (!res.ok) throw new Error('empty');
     cvIndex = await res.json();
-    ['c1','c2'].forEach(c => {
-      populateCvSelect(c);
-      $(`${c}-cv-status`).textContent = cvIndex.length
-        ? `${cvIndex.length} CV${cvIndex.length > 1 ? 's' : ''} available`
-        : 'No CVs processed yet';
-    });
   } catch {
-    ['c1','c2'].forEach(c => {
-      $(`${c}-cv-status`).textContent = 'No CVs processed yet — drop a file into /inbox/';
-    });
+    cvIndex = [];
   }
-}
-
-function populateCvSelect(candidate) {
-  const sel = $(`f-${candidate}-cv`);
-  const btn = $(`btn-${candidate}-cv`);
-  sel.innerHTML = '<option value="">No CV selected</option>';
-  cvIndex.forEach(cv => {
-    const o = document.createElement('option');
-    o.value = cv.filename;
-    o.textContent = cv.name + (cv.title ? ' — ' + cv.title : '');
-    sel.appendChild(o);
+  ['c1','c2'].forEach(c => {
+    const sel = $(`f-${c}-cv-registry`);
+    if (!sel) return;
+    sel.innerHTML = cvIndex.length
+      ? '<option value="">— pick from repo —</option>'
+      : '<option value="">No CVs in repo yet</option>';
+    cvIndex.forEach(cv => {
+      const o = document.createElement('option');
+      o.value = cv.filename;
+      o.textContent = cv.name;
+      sel.appendChild(o);
+    });
   });
-  sel.onchange = function() {
-    selectedCv[candidate] = this.value || null;
-    btn.disabled = !this.value;
-    schedulePreview();
-  };
-  btn.onclick = () => { if (selectedCv[candidate]) openPdfModal(candidate); };
 }
 
 /* ══════════════════════════════════════════════
    PDF MODAL (PDF.js)
 ══════════════════════════════════════════════ */
-async function openPdfModal(candidate) {
-  const filename = selectedCv[candidate];
-  if (!filename) return;
-
-  const url    = CV_RAW_BASE + filename;
+async function openPdfModal(url, candidate) {
+  if (!url) return;
+  const filename = url.split('/').pop();
   const modal  = $('pdf-modal');
   const wrap   = $('pdf-pages-wrap');
   const spinner = $('pdf-spinner');
