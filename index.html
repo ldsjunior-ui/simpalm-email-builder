@@ -406,6 +406,160 @@
     .toast.ok  { border-left: 3px solid var(--green); }
     .toast.err { border-left: 3px solid #c0392b; }
 
+    /* ── CV Picker ── */
+    .cv-picker-wrap {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .cv-picker-wrap .fs { flex: 1; }
+
+    .btn-view-cv {
+      flex-shrink: 0;
+      height: 37px;
+      padding: 0 11px;
+      background: var(--dark);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .18s, opacity .18s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-view-cv:hover:not(:disabled) { background: #2c3e55; }
+    .btn-view-cv:disabled { opacity: .35; cursor: default; }
+
+    .cv-status {
+      font-size: 10px;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    /* ── PDF Modal ── */
+    .pdf-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .pdf-modal.open { display: flex; }
+
+    .pdf-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(10,14,22,.72);
+      backdrop-filter: blur(4px);
+    }
+
+    .pdf-panel {
+      position: relative;
+      z-index: 1;
+      width: min(860px, 96vw);
+      height: min(92vh, 1100px);
+      background: #2A2F3E;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+
+    .pdf-panel-header {
+      background: #1E2736;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      gap: 12px;
+    }
+
+    .pdf-panel-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #F7F2EA;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pdf-panel-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .pdf-dl-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green-mid);
+      text-decoration: none;
+      padding: 5px 12px;
+      border: 1px solid rgba(159,191,180,.3);
+      border-radius: 100px;
+      transition: all .18s;
+    }
+    .pdf-dl-btn:hover { background: rgba(107,144,128,.15); color: #fff; }
+
+    .pdf-close-btn {
+      background: rgba(255,255,255,.08);
+      border: none;
+      color: rgba(255,255,255,.6);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .18s;
+      flex-shrink: 0;
+    }
+    .pdf-close-btn:hover { background: rgba(255,255,255,.16); color: #fff; }
+
+    .pdf-pages-wrap {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 24px;
+      background: #353B4F;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .pdf-pages-wrap::-webkit-scrollbar { width: 6px; }
+    .pdf-pages-wrap::-webkit-scrollbar-track { background: transparent; }
+    .pdf-pages-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
+
+    .pdf-page-canvas {
+      display: block;
+      max-width: 100%;
+      border-radius: 4px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+
+    .pdf-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 60px 0;
+      color: rgba(255,255,255,.45);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+    }
+
     /* Responsive */
     @media (max-width: 900px) {
       :root { --sidebar-w: 320px; }
@@ -557,6 +711,14 @@
               </div>
               <div class="skill-chips" id="c1-custom-chips"></div>
             </div>
+            <div class="fg">
+              <label class="fl">CV Profile</label>
+              <div class="cv-picker-wrap">
+                <select class="fs" id="f-c1-cv"><option value="">No CV selected</option></select>
+                <button class="btn-view-cv" id="btn-c1-cv" disabled title="Open CV viewer">&#128196; View CV</button>
+              </div>
+              <div class="cv-status" id="c1-cv-status"></div>
+            </div>
           </div>
         </div>
 
@@ -625,6 +787,14 @@
               </div>
               <div class="skill-chips" id="c2-custom-chips"></div>
             </div>
+            <div class="fg">
+              <label class="fl">CV Profile</label>
+              <div class="cv-picker-wrap">
+                <select class="fs" id="f-c2-cv"><option value="">No CV selected</option></select>
+                <button class="btn-view-cv" id="btn-c2-cv" disabled title="Open CV viewer">&#128196; View CV</button>
+              </div>
+              <div class="cv-status" id="c2-cv-status"></div>
+            </div>
           </div>
         </div>
 
@@ -663,6 +833,24 @@
 <!-- Toast notification -->
 <div class="toast" id="toast"></div>
 
+<!-- PDF Modal -->
+<div class="pdf-modal" id="pdf-modal" role="dialog" aria-modal="true">
+  <div class="pdf-backdrop" id="pdf-backdrop"></div>
+  <div class="pdf-panel">
+    <div class="pdf-panel-header">
+      <span class="pdf-panel-name" id="pdf-modal-name">CV Preview</span>
+      <div class="pdf-panel-actions">
+        <a class="pdf-dl-btn" id="pdf-modal-dl" href="#" target="_blank" download>&#11123; Download</a>
+        <button class="pdf-close-btn" id="pdf-modal-close" aria-label="Close">&#10005;</button>
+      </div>
+    </div>
+    <div class="pdf-pages-wrap" id="pdf-pages-wrap">
+      <div class="pdf-spinner" id="pdf-spinner">Loading PDF&hellip;</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
 <script>
 /* ══════════════════════════════════════════════
    CONFIG
@@ -878,6 +1066,7 @@ function buildEmail(d) {
                    style="display:inline-block;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
+                ${d.c1.cvUrl ? `<br><a href="${esc(d.c1.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;font-family:'Inter',-apple-system,sans-serif;font-size:10.5px;font-weight:600;color:#6B9080;text-decoration:none;letter-spacing:0.04em">&#128196;&nbsp;Full CV</a>` : ''}
               </td>
             </tr>
             ${d.c1.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c1.skills)}</td></tr>` : ''}
@@ -920,6 +1109,7 @@ function buildEmail(d) {
                    style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
+                ${d.c2.cvUrl ? `<br><a href="${esc(d.c2.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;font-family:'Inter',-apple-system,sans-serif;font-size:10.5px;font-weight:600;color:#BF9A52;text-decoration:none;letter-spacing:0.04em">&#128196;&nbsp;Full CV</a>` : ''}
               </td>
             </tr>
             ${d.c2.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c2.skills)}</td></tr>` : ''}
@@ -1095,6 +1285,7 @@ function getData() {
       rate:        val('f-c1r')  || 'US$ —',
       url:         val('f-c1u')  || '#',
       skills:      [...skills.c1, ...customSkills.c1],
+      cvUrl:       selectedCv.c1 ? CV_RAW_BASE + selectedCv.c1 : '',
     },
     c2: {
       initials:    (val('f-c2i') || 'C2').toUpperCase(),
@@ -1105,6 +1296,7 @@ function getData() {
       rate:        val('f-c2r')  || 'US$ —',
       url:         val('f-c2u')  || '#',
       skills:      [...skills.c2, ...customSkills.c2],
+      cvUrl:       selectedCv.c2 ? CV_RAW_BASE + selectedCv.c2 : '',
     },
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
@@ -1254,6 +1446,108 @@ function showApp() {
   });
 
   updatePreview();
+  loadCvIndex();
+}
+
+/* ══════════════════════════════════════════════
+   CV REGISTRY
+══════════════════════════════════════════════ */
+const CV_INDEX_URL = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/index.json';
+const CV_RAW_BASE  = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/processed/';
+
+let cvIndex = [];
+const selectedCv = { c1: null, c2: null };
+
+async function loadCvIndex() {
+  ['c1','c2'].forEach(c => {
+    $(`c${c.slice(1)}-cv-status`).textContent = 'Loading CVs…';
+  });
+  try {
+    const res = await fetch(CV_INDEX_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('empty');
+    cvIndex = await res.json();
+    ['c1','c2'].forEach(c => {
+      populateCvSelect(c);
+      $(`${c}-cv-status`).textContent = cvIndex.length
+        ? `${cvIndex.length} CV${cvIndex.length > 1 ? 's' : ''} available`
+        : 'No CVs processed yet';
+    });
+  } catch {
+    ['c1','c2'].forEach(c => {
+      $(`${c}-cv-status`).textContent = 'No CVs processed yet — drop a file into /inbox/';
+    });
+  }
+}
+
+function populateCvSelect(candidate) {
+  const sel = $(`f-${candidate}-cv`);
+  const btn = $(`btn-${candidate}-cv`);
+  sel.innerHTML = '<option value="">No CV selected</option>';
+  cvIndex.forEach(cv => {
+    const o = document.createElement('option');
+    o.value = cv.filename;
+    o.textContent = cv.name + (cv.title ? ' — ' + cv.title : '');
+    sel.appendChild(o);
+  });
+  sel.onchange = function() {
+    selectedCv[candidate] = this.value || null;
+    btn.disabled = !this.value;
+    schedulePreview();
+  };
+  btn.onclick = () => { if (selectedCv[candidate]) openPdfModal(candidate); };
+}
+
+/* ══════════════════════════════════════════════
+   PDF MODAL (PDF.js)
+══════════════════════════════════════════════ */
+async function openPdfModal(candidate) {
+  const filename = selectedCv[candidate];
+  if (!filename) return;
+
+  const url    = CV_RAW_BASE + filename;
+  const modal  = $('pdf-modal');
+  const wrap   = $('pdf-pages-wrap');
+  const spinner = $('pdf-spinner');
+
+  $('pdf-modal-name').textContent = filename.replace(' - CV Simpalm Staffing.pdf', '');
+  $('pdf-modal-dl').href = url;
+  $('pdf-modal-dl').setAttribute('download', filename);
+
+  wrap.innerHTML = '';
+  spinner.style.display = 'flex';
+  wrap.appendChild(spinner);
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const pdf = await pdfjsLib.getDocument(url).promise;
+    spinner.style.display = 'none';
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const vp   = page.getViewport({ scale: 1.6 });
+      const canvas = document.createElement('canvas');
+      canvas.width  = vp.width;
+      canvas.height = vp.height;
+      canvas.className = 'pdf-page-canvas';
+      wrap.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (err) {
+    spinner.style.display = 'flex';
+    spinner.textContent = 'Could not load PDF — use the Download button.';
+    console.error('PDF error:', err);
+  }
+}
+
+function closePdfModal() {
+  const modal = $('pdf-modal');
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 /* ══════════════════════════════════════════════
@@ -1280,6 +1574,11 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-preview').addEventListener('click', openPreview);
   $('btn-reset').addEventListener('click', resetForm);
   $('btn-logout').addEventListener('click', doLogout);
+
+  // PDF modal close
+  $('pdf-modal-close').addEventListener('click', closePdfModal);
+  $('pdf-backdrop').addEventListener('click', closePdfModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePdfModal(); });
 
   if (loggedIn()) showApp();
 });
