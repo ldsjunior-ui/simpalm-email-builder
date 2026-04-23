@@ -1328,7 +1328,7 @@ function getData() {
       rate:        val('f-c1r')  || 'US$ —',
       url:         val('f-c1u')  || '#',
       skills:      [...skills.c1, ...customSkills.c1],
-      cvUrl:       getCvUrl('c1'),
+      cvUrl:       getCvShareUrl('c1'),
     },
     c2: {
       initials:    (val('f-c2i') || 'C2').toUpperCase(),
@@ -1339,7 +1339,7 @@ function getData() {
       rate:        val('f-c2r')  || 'US$ —',
       url:         val('f-c2u')  || '#',
       skills:      [...skills.c2, ...customSkills.c2],
-      cvUrl:       getCvUrl('c2'),
+      cvUrl:       getCvShareUrl('c2'),
     },
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
@@ -1497,17 +1497,48 @@ function showApp() {
 /* ══════════════════════════════════════════════
    CV REGISTRY
 ══════════════════════════════════════════════ */
-const CV_INDEX_URL = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/index.json';
-const CV_RAW_BASE  = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/processed/';
+// ── Paste your Apps Script Web App URL here after deploying SimpalmCVPipeline.gs ──
+const CV_DRIVE_INDEX_URL = '';  // e.g. 'https://script.google.com/macros/s/…/exec'
+const CV_GH_INDEX_URL    = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/index.json';
+const CV_RAW_BASE        = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/processed/';
 
 let cvIndex = [];
 
-// Returns the active CV URL for a candidate (URL input wins over registry)
-function getCvUrl(candidate) {
+// Returns a full entry object { previewUrl, downloadUrl, label } or null
+function getCvEntry(candidate) {
   const manual = ($(`f-${candidate}-cv-url`)?.value || '').trim();
-  if (manual) return manual;
+  if (manual) {
+    return {
+      previewUrl:  manual,
+      downloadUrl: manual,
+      label: decodeURIComponent(manual.split('/').pop().split('?')[0]),
+    };
+  }
   const reg = ($(`f-${candidate}-cv-registry`)?.value || '').trim();
-  return reg ? CV_RAW_BASE + reg : '';
+  if (!reg) return null;
+  const entry = cvIndex.find(e => e.filename === reg);
+  if (entry) return {
+    previewUrl:  entry.drivePreviewUrl  || (CV_RAW_BASE + reg),
+    downloadUrl: entry.driveDownloadUrl || (CV_RAW_BASE + reg),
+    label:       entry.name || reg.replace(' - CV Simpalm Staffing.pdf', ''),
+  };
+  return {
+    previewUrl:  CV_RAW_BASE + reg,
+    downloadUrl: CV_RAW_BASE + reg,
+    label: reg.replace(' - CV Simpalm Staffing.pdf', ''),
+  };
+}
+
+// Preview URL — used by the View CV button and inline preview
+function getCvUrl(candidate) {
+  const e = getCvEntry(candidate);
+  return e ? e.previewUrl : '';
+}
+
+// Share/download URL — used in the outgoing email's "📄 Full CV" link
+function getCvShareUrl(candidate) {
+  const e = getCvEntry(candidate);
+  return e ? e.downloadUrl : '';
 }
 
 function setupCvBlock(candidate) {
@@ -1519,7 +1550,7 @@ function setupCvBlock(candidate) {
     const url = getCvUrl(candidate);
     btn.disabled = !url;
     schedulePreview();
-    // If user picks from registry, clear the manual URL field
+    // If user picks from Drive registry, clear the manual URL field
     if (regSel === document.activeElement && regSel.value) urlInp.value = '';
     // If user types a URL, reset the registry selector
     if (urlInp === document.activeElement && urlInp.value) regSel.value = '';
@@ -1528,14 +1559,16 @@ function setupCvBlock(candidate) {
   urlInp.addEventListener('input', refresh);
   regSel.addEventListener('change', refresh);
   btn.addEventListener('click', () => {
-    const url = getCvUrl(candidate);
-    if (url) openPdfModal(url, candidate);
+    const entry = getCvEntry(candidate);
+    if (entry) openPdfModal(entry);
   });
 }
 
 async function loadCvIndex() {
   try {
-    const res = await fetch(CV_INDEX_URL + '?t=' + Date.now());
+    const url = CV_DRIVE_INDEX_URL || CV_GH_INDEX_URL;
+    const sep = url.includes('?') ? '&' : '?';
+    const res = await fetch(url + sep + 't=' + Date.now());
     if (!res.ok) throw new Error('empty');
     cvIndex = await res.json();
   } catch {
@@ -1545,8 +1578,8 @@ async function loadCvIndex() {
     const sel = $(`f-${c}-cv-registry`);
     if (!sel) return;
     sel.innerHTML = cvIndex.length
-      ? '<option value="">— pick from repo —</option>'
-      : '<option value="">No CVs in repo yet</option>';
+      ? '<option value="">— pick from Drive —</option>'
+      : '<option value="">No CVs in Drive yet</option>';
     cvIndex.forEach(cv => {
       const o = document.createElement('option');
       o.value = cv.filename;
@@ -1559,16 +1592,16 @@ async function loadCvIndex() {
 /* ══════════════════════════════════════════════
    PDF MODAL (PDF.js)
 ══════════════════════════════════════════════ */
-async function openPdfModal(url, candidate) {
-  if (!url) return;
-  const filename = url.split('/').pop();
-  const modal  = $('pdf-modal');
-  const wrap   = $('pdf-pages-wrap');
+async function openPdfModal(entry) {
+  if (!entry) return;
+  const { previewUrl, downloadUrl, label } = entry;
+  const modal   = $('pdf-modal');
+  const wrap    = $('pdf-pages-wrap');
   const spinner = $('pdf-spinner');
 
-  $('pdf-modal-name').textContent = filename.replace(' - CV Simpalm Staffing.pdf', '');
-  $('pdf-modal-dl').href = url;
-  $('pdf-modal-dl').setAttribute('download', filename);
+  $('pdf-modal-name').textContent = label.replace(' - CV Simpalm Staffing.pdf', '');
+  $('pdf-modal-dl').href = downloadUrl;
+  $('pdf-modal-dl').setAttribute('download', decodeURIComponent(downloadUrl.split('/').pop().split('?')[0]));
 
   wrap.innerHTML = '';
   spinner.style.display = 'flex';
@@ -1576,28 +1609,42 @@ async function openPdfModal(url, candidate) {
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  try {
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const isDrive = previewUrl.includes('drive.google.com');
 
-    const pdf = await pdfjsLib.getDocument(url).promise;
+  if (isDrive) {
+    // Google Drive embedded viewer — no CORS, no PDF.js needed
     spinner.style.display = 'none';
+    const iframe = document.createElement('iframe');
+    iframe.src = previewUrl.includes('/preview') ? previewUrl : previewUrl.replace('/view', '/preview');
+    iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:500px;display:block;';
+    iframe.allow = 'autoplay';
+    wrap.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;';
+    wrap.appendChild(iframe);
+  } else {
+    // PDF.js for direct PDF URLs (OneDrive, raw GitHub, etc.)
+    try {
+      const pdfjsLib = window['pdfjs-dist/build/pdf'];
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const vp   = page.getViewport({ scale: 1.6 });
-      const canvas = document.createElement('canvas');
-      canvas.width  = vp.width;
-      canvas.height = vp.height;
-      canvas.className = 'pdf-page-canvas';
-      wrap.appendChild(canvas);
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      const pdf = await pdfjsLib.getDocument(previewUrl).promise;
+      spinner.style.display = 'none';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const vp   = page.getViewport({ scale: 1.6 });
+        const canvas = document.createElement('canvas');
+        canvas.width  = vp.width;
+        canvas.height = vp.height;
+        canvas.className = 'pdf-page-canvas';
+        wrap.appendChild(canvas);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      }
+    } catch (err) {
+      spinner.style.display = 'flex';
+      spinner.textContent = 'Could not load PDF — use the Download button.';
+      console.error('PDF error:', err);
     }
-  } catch (err) {
-    spinner.style.display = 'flex';
-    spinner.textContent = 'Could not load PDF — use the Download button.';
-    console.error('PDF error:', err);
   }
 }
 
