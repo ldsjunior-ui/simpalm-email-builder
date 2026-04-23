@@ -1109,7 +1109,7 @@ function buildEmail(d) {
                    style="display:inline-block;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
-                ${d.c1.cvUrl ? `<br><a href="${esc(d.c1.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;font-family:'Inter',-apple-system,sans-serif;font-size:10.5px;font-weight:600;color:#6B9080;text-decoration:none;letter-spacing:0.04em">&#128196;&nbsp;Full CV</a>` : ''}
+                ${d.c1.cvUrl ? `<br><a href="${esc(d.c1.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>` : ''}
               </td>
             </tr>
             ${d.c1.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c1.skills)}</td></tr>` : ''}
@@ -1152,7 +1152,7 @@ function buildEmail(d) {
                    style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
-                ${d.c2.cvUrl ? `<br><a href="${esc(d.c2.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;font-family:'Inter',-apple-system,sans-serif;font-size:10.5px;font-weight:600;color:#BF9A52;text-decoration:none;letter-spacing:0.04em">&#128196;&nbsp;Full CV</a>` : ''}
+                ${d.c2.cvUrl ? `<br><a href="${esc(d.c2.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>` : ''}
               </td>
             </tr>
             ${d.c2.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c2.skills)}</td></tr>` : ''}
