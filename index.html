@@ -568,8 +568,8 @@
     @keyframes pl-spin { to { transform: rotate(360deg); } }
     .pl-spin-icon { display: inline-block; animation: pl-spin .7s linear infinite; }
 
-    /* CV list inside the panel */
-    .pl-body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+    /* Stats widget container */
+    .pl-body { padding: 0; }
 
     .pl-empty {
       font-size: 11px;
@@ -640,6 +640,67 @@
     .pl-pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%;
                 background: var(--gold); animation: pl-pulse 1.3s ease-in-out infinite;
                 margin-right: 3px; vertical-align: middle; }
+
+    /* ── Pipeline stats widget (compact numbers view) ── */
+    .pl-stats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 4px 4px;
+    }
+    .pl-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .pl-stat-num {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .pl-stat-ready .pl-stat-num { color: #1a5c2a; }
+    .pl-stat-pend  .pl-stat-num { color: #7a5000; }
+    .pl-stat-lbl {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    .pl-stat-sep { color: var(--border); font-size: 18px; font-weight: 300; line-height: 1; align-self: center; }
+
+    .pl-bar-wrap {
+      margin: 6px 10px 0;
+      height: 5px;
+      background: var(--border-lt);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .pl-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--green-dark));
+      border-radius: 100px;
+      transition: width .4s ease;
+      min-width: 2px;
+    }
+    .pl-bar-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 10px 6px;
+    }
+    .pl-pct {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .pl-eta {
+      font-size: 10px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .pl-eta.pl-done { color: var(--green-dark); font-style: normal; font-weight: 600; }
 
     .pl-footer {
       font-size: 9.5px;
@@ -1753,11 +1814,11 @@ function setupCvBlock(candidate) {
 
   function renderResults(q) {
     const ql = (q || '').toLowerCase();
-    const matches = ql.length
-      ? cvIndex.filter(cv =>
-          (cv.name  || '').toLowerCase().includes(ql) ||
-          (cv.title || '').toLowerCase().includes(ql))
-      : cvIndex.slice(); // show all when input is focused but empty
+    // Only show results when the user has typed at least 1 character
+    if (!ql.length) { results.style.display = 'none'; results.innerHTML = ''; return; }
+    const matches = cvIndex.filter(cv =>
+      (cv.name  || '').toLowerCase().includes(ql) ||
+      (cv.title || '').toLowerCase().includes(ql));
 
     if (!matches.length) { results.style.display = 'none'; results.innerHTML = ''; return; }
 
@@ -1793,7 +1854,15 @@ function setupCvBlock(candidate) {
     schedulePreview();
   }
 
-  searchInp.addEventListener('focus', () => renderResults(searchInp.value));
+  searchInp.addEventListener('focus', () => {
+    if (!searchInp.value && cvIndex.length) {
+      // Show a lightweight hint instead of listing all CVs
+      results.innerHTML = `<div style="padding:7px 10px;font-size:10.5px;color:var(--muted);font-style:italic">${cvIndex.length} candidate${cvIndex.length !== 1 ? 's' : ''} available — type to search</div>`;
+      results.style.display = 'block';
+    } else {
+      renderResults(searchInp.value);
+    }
+  });
   searchInp.addEventListener('input', () => renderResults(searchInp.value));
   searchInp.addEventListener('blur',  () => setTimeout(() => { results.style.display = 'none'; }, 160));
   viewBtn.addEventListener('click',   () => { const e = getCvEntry(candidate); if (e) openPdfModal(e); });
@@ -1912,39 +1981,38 @@ async function loadPipelineStatus() {
   if (!items.length) {
     body.innerHTML = '<div class="pl-empty">No CVs in the Drive folder yet.</div>';
   } else {
-    body.innerHTML = '';
-    items.forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'pl-item';
+    const total   = items.length;
+    const ready   = items.filter(i => i.status === 'ready').length;
+    const pending = items.filter(i => i.status === 'pending').length;
+    const pct     = Math.round((ready / total) * 100);
+    const etaMins = Math.ceil(pending * 2.5); // ~2–3 min per CV via GitHub Actions
 
-      if (item.status === 'ready') {
-        row.innerHTML = `
-          <span class="pl-icon">✅</span>
-          <div class="pl-info">
-            <div class="pl-name">${item.name}</div>
-            <div class="pl-meta">
-              <span class="pl-badge pl-badge-ready">Ready</span>
-              <span class="pl-est">${_plAgo(item.ts)}</span>
-              ${item.viewUrl
-                ? `<a class="pl-link" href="${item.viewUrl}" target="_blank" rel="noopener">View PDF →</a>`
-                : ''}
-            </div>
-          </div>`;
-      } else {
-        const eta = _plEtaStr(item.ts);
-        row.innerHTML = `
-          <span class="pl-icon">⏳</span>
-          <div class="pl-info">
-            <div class="pl-name">${item.name}</div>
-            <div class="pl-meta">
-              <span class="pl-pulse"></span>
-              <span class="pl-badge pl-badge-pending">Processing</span>
-              <span class="pl-est">${eta}</span>
-            </div>
-          </div>`;
-      }
-      body.appendChild(row);
-    });
+    body.innerHTML = `
+      <div class="pl-stats">
+        <div class="pl-stat">
+          <span class="pl-stat-num">${total}</span>
+          <span class="pl-stat-lbl">Total</span>
+        </div>
+        <span class="pl-stat-sep">·</span>
+        <div class="pl-stat pl-stat-ready">
+          <span class="pl-stat-num">✅ ${ready}</span>
+          <span class="pl-stat-lbl">Ready</span>
+        </div>
+        <span class="pl-stat-sep">·</span>
+        <div class="pl-stat pl-stat-pend">
+          <span class="pl-stat-num">${pending > 0 ? '<span class="pl-pulse"></span>' : ''}${pending}</span>
+          <span class="pl-stat-lbl">Processing</span>
+        </div>
+      </div>
+      <div class="pl-bar-wrap">
+        <div class="pl-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="pl-bar-meta">
+        <span class="pl-pct">${pct}%</span>
+        ${pending > 0
+          ? `<span class="pl-eta">ETA ~${etaMins} min</span>`
+          : `<span class="pl-eta pl-done">All done ✓</span>`}
+      </div>`;
   }
 
   if (ts) footer.textContent = `Last checked: ${_plFmt(ts)}`;
