@@ -1981,11 +1981,72 @@ async function loadCvIndex() {
    CV PIPELINE MONITOR
 ══════════════════════════════════════════════ */
 
-let _plPollTimer  = null;   // interval handle while processing
-let _plTriggeredAt = null;  // timestamp of last manual trigger
+let _plPollTimer   = null;        // interval handle while processing
+let _plTriggeredAt = null;        // timestamp of last manual trigger
+let _pendingCVNames = new Set();  // names that were pending in the last poll
 
 // How long GitHub Actions typically takes (ms) — shown as estimated wait
 const PL_ESTIMATE_MS = 2.5 * 60 * 1000;  // 2.5 min
+
+// ── CV-ready notification ─────────────────────────────────────────────────────
+
+async function _requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+}
+
+function _cvNotify(names) {
+  // In-app banner (always)
+  const who = names.length === 1 ? `${names[0]}` : `${names.length} CVs`;
+  toastReady(`✅ ${who} ready to send!`);
+
+  // Desktop notification (if permission granted)
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const body = names.length === 1
+    ? `${names[0]}'s CV has been processed and is ready to send.`
+    : `${names.join(', ')} — CVs processed and ready to send.`;
+  const n = new Notification('PalmDeck · CV Ready ✅', {
+    body,
+    icon: 'https://simpalmstaffing.com/wp-content/uploads/2025/08/simpalm-staffing-logo.svg',
+    tag:  'palmdeck-cv-ready',
+    renotify: true,
+  });
+  n.onclick = () => { window.focus(); n.close(); };
+  setTimeout(() => n.close(), 10_000);
+}
+
+function toastReady(msg) {
+  // A distinct "ready" banner above the pipeline widget
+  let banner = document.getElementById('pl-ready-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'pl-ready-banner';
+    banner.style.cssText = [
+      'position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-20px)',
+      'background:#2E6B5A;color:#fff;padding:12px 24px 12px 16px',
+      'border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.22)',
+      'font-size:13px;font-weight:600;letter-spacing:.02em',
+      'display:flex;align-items:center;gap:10px;z-index:9999',
+      'opacity:0;transition:opacity .3s,transform .3s;cursor:pointer',
+    ].join(';');
+    banner.onclick = () => { banner.style.opacity = '0'; banner.style.transform = 'translateX(-50%) translateY(-20px)'; };
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = `<span style="font-size:18px">✅</span><span>${msg}</span>`;
+  // Animate in
+  requestAnimationFrame(() => {
+    banner.style.opacity = '1';
+    banner.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  // Auto-hide after 12s
+  clearTimeout(banner._hideTimer);
+  banner._hideTimer = setTimeout(() => {
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateX(-50%) translateY(-20px)';
+  }, 12_000);
+}
 
 function _plNow()   { return new Date(); }
 function _plFmt(d)  {
@@ -2065,6 +2126,16 @@ async function loadPipelineStatus() {
       items.push({ status: 'pending', name: u.name, ts: u.created });
     }
   });
+
+  // ── Detect pending → ready transitions and notify ────────────
+  if (_pendingCVNames.size > 0) {
+    const nowReady = items
+      .filter(i => i.status === 'ready' && _pendingCVNames.has(i.name))
+      .map(i => i.name);
+    if (nowReady.length > 0) _cvNotify(nowReady);
+  }
+  // Update pending tracker for next poll
+  _pendingCVNames = new Set(items.filter(i => i.status === 'pending').map(i => i.name));
 
   // ── Render ────────────────────────────────────────────────────
   const hasPending = items.some(i => i.status === 'pending');
@@ -2148,6 +2219,9 @@ async function triggerPipeline() {
   btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Triggering…';
   _plTriggeredAt = Date.now();
 
+  // Request notification permission on the first trigger click (user gesture required)
+  await _requestNotifPermission();
+
   try {
     // Collect source_file paths for selected CVs (c1, c2)
     // source_file is stored in index.json by process_cv.py (e.g. "inbox/Juan Carlos-DE.pdf")
@@ -2174,6 +2248,15 @@ async function triggerPipeline() {
         ? `${selectedFiles.length} selected CV(s)`
         : 'all inbox CVs';
       toast(`⚡ Triggered reprocessing of ${who}. Ready in ~2–3 min.`);
+      // Seed pending-tracker with the names we just triggered
+      // so the next poll can detect when they flip to ready
+      if (selectedFiles.length) {
+        const triggeredNames = selectedFiles.map(sf => {
+          const entry = cvIndex.find(e => e.source_file === sf);
+          return entry ? entry.name : sf.split('/').pop().replace(/\.(pdf|docx?)$/i, '');
+        });
+        triggeredNames.forEach(n => _pendingCVNames.add(n));
+      }
       clearInterval(_plPollTimer);
       _plPollTimer = setInterval(loadPipelineStatus, 30_000);
       await loadPipelineStatus();
