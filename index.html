@@ -2136,7 +2136,7 @@ async function loadPipelineStatus() {
 async function triggerPipeline() {
   const btn = $('pl-btn-trigger');
   if (!CV_DRIVE_INDEX_URL) {
-    toast('⚠️ Apps Script Web App not configured yet — see setup instructions.');
+    toast('⚠️ Apps Script Web App not configured.');
     return;
   }
   btn.disabled = true;
@@ -2144,11 +2144,11 @@ async function triggerPipeline() {
   _plTriggeredAt = Date.now();
 
   try {
+    // Apps Script ?action=trigger now pushes a GitHub trigger file (no DriveApp needed)
     const res  = await fetch(CV_DRIVE_INDEX_URL + '?action=trigger&t=' + Date.now());
     const data = await res.json();
     if (data.ok) {
-      toast('⚡ Pipeline triggered! PDF will be ready in ~2–3 min.');
-      // Start polling every 30s
+      toast('⚡ Pipeline triggered! CVs will be ready in ~2–3 min.');
       clearInterval(_plPollTimer);
       _plPollTimer = setInterval(loadPipelineStatus, 30_000);
       await loadPipelineStatus();
@@ -2156,11 +2156,10 @@ async function triggerPipeline() {
       toast('❌ Trigger failed: ' + (data.error || 'unknown error'), 'err');
     }
   } catch (err) {
-    toast('❌ Could not reach Apps Script: ' + err.message, 'err');
+    toast('❌ Network error: ' + err.message, 'err');
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = '⚡ Trigger Now'; }, 5000);
   }
-
-  btn.disabled = false;
-  btn.innerHTML = '⚡ Trigger Now';
 }
 
 // Wire up buttons
@@ -2191,43 +2190,17 @@ async function openPdfModal(entry) {
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
+  // Google Docs Viewer handles all sources (Drive, GitHub raw, OneDrive) —
+  // no CORS issues, no pdf.js worker, works for every public PDF URL.
+  spinner.style.display = 'none';
+  const iframe = document.createElement('iframe');
   const isDrive = previewUrl.includes('drive.google.com');
-
-  if (isDrive) {
-    // Google Drive embedded viewer — no CORS, no PDF.js needed
-    spinner.style.display = 'none';
-    const iframe = document.createElement('iframe');
-    iframe.src = previewUrl.includes('/preview') ? previewUrl : previewUrl.replace('/view', '/preview');
-    iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:500px;display:block;';
-    iframe.allow = 'autoplay';
-    wrap.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;';
-    wrap.appendChild(iframe);
-  } else {
-    // PDF.js for direct PDF URLs (OneDrive, raw GitHub, etc.)
-    try {
-      const pdfjsLib = window['pdfjs-dist/build/pdf'];
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-      const pdf = await pdfjsLib.getDocument(previewUrl).promise;
-      spinner.style.display = 'none';
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const vp   = page.getViewport({ scale: 1.6 });
-        const canvas = document.createElement('canvas');
-        canvas.width  = vp.width;
-        canvas.height = vp.height;
-        canvas.className = 'pdf-page-canvas';
-        wrap.appendChild(canvas);
-        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-      }
-    } catch (err) {
-      spinner.style.display = 'flex';
-      spinner.textContent = 'Could not load PDF — use the Download button.';
-      console.error('PDF error:', err);
-    }
-  }
+  iframe.src = isDrive
+    ? (previewUrl.includes('/preview') ? previewUrl : previewUrl.replace('/view', '/preview'))
+    : `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true`;
+  iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:500px;display:block;background:#353B4F;';
+  wrap.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;padding:0;';
+  wrap.appendChild(iframe);
 }
 
 function closePdfModal() {
