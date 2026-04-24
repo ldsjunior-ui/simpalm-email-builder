@@ -2149,11 +2149,31 @@ async function triggerPipeline() {
   _plTriggeredAt = Date.now();
 
   try {
-    // Apps Script ?action=trigger now pushes a GitHub trigger file (no DriveApp needed)
-    const res  = await fetch(CV_DRIVE_INDEX_URL + '?action=trigger&t=' + Date.now());
+    // Collect source_file paths for selected CVs (c1, c2)
+    // source_file is stored in index.json by process_cv.py (e.g. "inbox/Juan Carlos-DE.pdf")
+    const selectedFiles = ['c1', 'c2']
+      .map(c => {
+        const fn = $(`f-${c}-cv-registry`)?.value?.trim();
+        if (!fn) return null;
+        const entry = cvIndex.find(e => e.filename === fn);
+        return entry?.source_file || null;  // e.g. "inbox/Juan Carlos-DE.pdf"
+      })
+      .filter(Boolean);
+
+    let url = CV_DRIVE_INDEX_URL + '?action=trigger&t=' + Date.now();
+    if (selectedFiles.length) {
+      // Selective trigger — only reprocess the chosen CVs
+      url += '&files=' + encodeURIComponent(selectedFiles.join('|'));
+    }
+    // If nothing selected → full trigger (process all inbox CVs)
+
+    const res  = await fetch(url);
     const data = await res.json();
     if (data.ok) {
-      toast('⚡ Pipeline triggered! CVs will be ready in ~2–3 min.');
+      const who = selectedFiles.length
+        ? `${selectedFiles.length} selected CV(s)`
+        : 'all inbox CVs';
+      toast(`⚡ Triggered reprocessing of ${who}. Ready in ~2–3 min.`);
       clearInterval(_plPollTimer);
       _plPollTimer = setInterval(loadPipelineStatus, 30_000);
       await loadPipelineStatus();
