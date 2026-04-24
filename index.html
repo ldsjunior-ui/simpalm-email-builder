@@ -1793,19 +1793,16 @@ const CV_RAW_BASE        = 'https://raw.githubusercontent.com/ldsjunior-ui/simpa
 let cvIndex = [];
 
 // Returns a full entry object { previewUrl, downloadUrl, label } or null
+// Always uses GitHub raw URL — Drive URLs are blocked by Workspace admin policy
 function getCvEntry(candidate) {
   const reg = ($(`f-${candidate}-cv-registry`)?.value || '').trim();
   if (!reg) return null;
   const entry = cvIndex.find(e => e.filename === reg);
-  if (entry) return {
-    previewUrl:  entry.drivePreviewUrl  || (CV_RAW_BASE + encodeURIComponent(reg)),
-    downloadUrl: entry.driveDownloadUrl || (CV_RAW_BASE + encodeURIComponent(reg)),
-    label:       entry.name || reg.replace(' - CV Simpalm Staffing.pdf', ''),
-  };
+  const ghUrl = CV_RAW_BASE + encodeURIComponent(reg);
   return {
-    previewUrl:  CV_RAW_BASE + encodeURIComponent(reg),
-    downloadUrl: CV_RAW_BASE + encodeURIComponent(reg),
-    label: reg.replace(' - CV Simpalm Staffing.pdf', ''),
+    previewUrl:  ghUrl,
+    downloadUrl: ghUrl,
+    label: (entry && entry.name) || reg.replace(' - CV Simpalm Staffing.pdf', ''),
   };
 }
 
@@ -1957,10 +1954,10 @@ function setupCvBlock(candidate) {
 }
 
 async function loadCvIndex() {
+  // Always read from GitHub — it is the authoritative processed-CV index.
+  // Drive URLs are blocked by the Workspace admin; the GitHub index never has Drive URLs.
   try {
-    const url = CV_DRIVE_INDEX_URL || CV_GH_INDEX_URL;
-    const sep = url.includes('?') ? '&' : '?';
-    const res = await fetch(url + sep + 't=' + Date.now());
+    const res = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
     if (!res.ok) throw new Error('empty');
     cvIndex = await res.json();
   } catch {
@@ -2015,48 +2012,55 @@ async function loadPipelineStatus() {
   const emptyEl = $('pl-empty');
 
   // ── Fetch status ──────────────────────────────────────────────
+  // GitHub index.json is the single source of truth for processed CVs.
+  // Drive status (?action=status) is only used to find unprocessed uploads.
   let uploaded  = [];
   let processed = [];
-  let ts        = null;
+  let ts        = _plNow();
 
+  // 1. Always fetch processed CVs from GitHub (never Drive — admin blocks Drive URLs)
+  try {
+    const ghRes = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
+    if (ghRes.ok) processed = await ghRes.json();
+  } catch { /* use empty list */ }
+
+  // 2. Optionally fetch Drive upload list to detect unprocessed originals
   if (CV_DRIVE_INDEX_URL) {
-    // Full status from Apps Script
     try {
       const res  = await fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now());
       const data = await res.json();
-      uploaded   = data.uploaded  || [];
-      processed  = data.processed || [];
-      ts         = data.ts ? new Date(data.ts) : _plNow();
-    } catch {
-      // fall through to GitHub-only mode
-    }
-  }
-
-  if (!uploaded.length && !processed.length) {
-    // Fallback: just show GitHub processed index
-    processed = cvIndex;   // already loaded by loadCvIndex()
+      uploaded   = data.uploaded || [];
+      ts         = data.ts ? new Date(data.ts) : ts;
+    } catch { /* Drive unreachable — no pending info available */ }
   }
 
   // ── Build items ───────────────────────────────────────────────
-  // Map processed filenames for quick lookup
-  const procMap = {};
-  processed.forEach(p => { procMap[p.filename] = p; });
+  // Set of candidate names already accounted for (case-insensitive)
+  const readyNames = new Set(processed.map(p => (p.name || '').toLowerCase()));
 
   const items = [];
 
-  // Processed CVs (may not be in uploaded list if Drive data unavailable)
+  // Processed CVs — always use GitHub raw URL (Drive URLs are blocked)
   processed.forEach(p => {
-    const viewUrl = p.drivePreviewUrl || (CV_RAW_BASE + encodeURIComponent(p.filename));
     items.push({ status: 'ready', name: p.name, filename: p.filename,
-                 ts: p.processed, viewUrl });
+                 ts: p.processed,
+                 viewUrl: CV_RAW_BASE + encodeURIComponent(p.filename) });
   });
 
-  // Uploaded but NOT yet processed
+  // Uploaded to Drive but NOT yet processed — use name-based match (not filename substring)
   uploaded.forEach(u => {
-    const alreadyIn = items.some(i => i.filename &&
-      i.filename.toLowerCase().includes(
-        u.name.replace(/\.(pdf|docx?)$/i,'').toLowerCase().trim().split(/\s+/).slice(0,2).join(' ').toLowerCase()
-      ));
+    // Strip extension and numeric prefixes to get the human name
+    const cleanName = u.name
+      .replace(/\.(pdf|docx?)$/i, '')
+      .replace(/^\d+/, '')
+      .replace(/[-_]/g, ' ')
+      .trim()
+      .toLowerCase();
+    // Consider it pending only if no ready CV name contains any token of the upload name
+    const tokens = cleanName.split(/\s+/).filter(t => t.length > 2);
+    const alreadyIn = tokens.length === 0 || tokens.some(t =>
+      [...readyNames].some(rn => rn.includes(t))
+    );
     if (!alreadyIn) {
       items.push({ status: 'pending', name: u.name, ts: u.created });
     }
@@ -2114,9 +2118,10 @@ async function loadPipelineStatus() {
     _plPollTimer = null;
   }
 
-  // Also refresh the CV index (search reads cvIndex directly; hidden select for value-tracking)
+  // Refresh the CV search index — always use GitHub-sourced processed list
+  // (this keeps the search dropdown in sync with what's actually processed)
   if (processed.length) {
-    cvIndex = processed;
+    cvIndex = processed;   // these are clean GitHub index entries, no Drive URLs
     ['c1','c2'].forEach(c => {
       const sel = $(`f-${c}-cv-registry`);
       if (!sel) return;
@@ -2128,7 +2133,7 @@ async function loadPipelineStatus() {
         o.textContent = cv.name;
         sel.appendChild(o);
       });
-      if (prev) sel.value = prev; // restore selection after index refresh
+      if (prev) sel.value = prev;
     });
   }
 }
@@ -2190,14 +2195,11 @@ async function openPdfModal(entry) {
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Google Docs Viewer handles all sources (Drive, GitHub raw, OneDrive) —
-  // no CORS issues, no pdf.js worker, works for every public PDF URL.
+  // Google Docs Viewer handles GitHub raw URLs without CORS issues.
+  // Drive URLs are blocked by the Workspace admin — we never use them.
   spinner.style.display = 'none';
   const iframe = document.createElement('iframe');
-  const isDrive = previewUrl.includes('drive.google.com');
-  iframe.src = isDrive
-    ? (previewUrl.includes('/preview') ? previewUrl : previewUrl.replace('/view', '/preview'))
-    : `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true`;
+  iframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true`;
   iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:500px;display:block;background:#353B4F;';
   wrap.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;padding:0;';
   wrap.appendChild(iframe);
