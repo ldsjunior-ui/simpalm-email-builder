@@ -500,26 +500,6 @@
     }
     .btn-clear-cv:hover { color: #fff; }
 
-    .btn-view-cv {
-      flex-shrink: 0;
-      height: 28px;
-      padding: 0 9px;
-      background: rgba(255,255,255,.15);
-      border: 1px solid rgba(255,255,255,.25);
-      color: #fff;
-      border-radius: 5px;
-      font-family: 'Inter', sans-serif;
-      font-size: 10.5px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background .15s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .btn-view-cv:hover { background: rgba(255,255,255,.28); }
-
     /* ══════════════════════════════════════
        CV PIPELINE MONITOR
     ══════════════════════════════════════ */
@@ -735,124 +715,6 @@
       margin-top: 2px;
     }
 
-    /* ── PDF Modal ── */
-    .pdf-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    .pdf-modal.open { display: flex; }
-
-    .pdf-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(10,14,22,.72);
-      backdrop-filter: blur(4px);
-    }
-
-    .pdf-panel {
-      position: relative;
-      z-index: 1;
-      width: min(860px, 96vw);
-      height: min(92vh, 1100px);
-      background: #2A2F3E;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,.55);
-    }
-
-    .pdf-panel-header {
-      background: #1E2736;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      border-bottom: 1px solid rgba(255,255,255,.07);
-      gap: 12px;
-    }
-
-    .pdf-panel-name {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 14px;
-      font-weight: 700;
-      color: #F7F2EA;
-      letter-spacing: .04em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .pdf-panel-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-    .pdf-dl-btn {
-      font-family: 'Inter', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--green-mid);
-      text-decoration: none;
-      padding: 5px 12px;
-      border: 1px solid rgba(159,191,180,.3);
-      border-radius: 100px;
-      transition: all .18s;
-    }
-    .pdf-dl-btn:hover { background: rgba(107,144,128,.15); color: #fff; }
-
-    .pdf-close-btn {
-      background: rgba(255,255,255,.08);
-      border: none;
-      color: rgba(255,255,255,.6);
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      font-size: 15px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .18s;
-      flex-shrink: 0;
-    }
-    .pdf-close-btn:hover { background: rgba(255,255,255,.16); color: #fff; }
-
-    .pdf-pages-wrap {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 24px;
-      background: #353B4F;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-    .pdf-pages-wrap::-webkit-scrollbar { width: 6px; }
-    .pdf-pages-wrap::-webkit-scrollbar-track { background: transparent; }
-    .pdf-pages-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
-
-    .pdf-page-canvas {
-      display: block;
-      max-width: 100%;
-      border-radius: 4px;
-      box-shadow: 0 4px 24px rgba(0,0,0,.4);
-    }
-
-    .pdf-spinner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 60px 0;
-      color: rgba(255,255,255,.45);
-      font-size: 13px;
-      font-family: 'Inter', sans-serif;
-    }
-
     /* Responsive */
     @media (max-width: 900px) {
       :root { --sidebar-w: 320px; }
@@ -1003,7 +865,6 @@
               </div>
               <div class="cv-chip" id="f-c1-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c1-cv-chip-name"></span>
-                <button class="btn-view-cv" id="btn-c1-cv">&#128196; View CV</button>
                 <button class="btn-clear-cv" id="btn-c1-cv-clear" title="Clear selection">&#10005;</button>
               </div>
               <select id="f-c1-cv-registry" style="display:none">
@@ -1090,7 +951,6 @@
               </div>
               <div class="cv-chip" id="f-c2-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c2-cv-chip-name"></span>
-                <button class="btn-view-cv" id="btn-c2-cv">&#128196; View CV</button>
                 <button class="btn-clear-cv" id="btn-c2-cv-clear" title="Clear selection">&#10005;</button>
               </div>
               <select id="f-c2-cv-registry" style="display:none">
@@ -1163,24 +1023,6 @@
 <!-- Toast notification -->
 <div class="toast" id="toast"></div>
 
-<!-- PDF Modal -->
-<div class="pdf-modal" id="pdf-modal" role="dialog" aria-modal="true">
-  <div class="pdf-backdrop" id="pdf-backdrop"></div>
-  <div class="pdf-panel">
-    <div class="pdf-panel-header">
-      <span class="pdf-panel-name" id="pdf-modal-name">CV Preview</span>
-      <div class="pdf-panel-actions">
-        <a class="pdf-dl-btn" id="pdf-modal-dl" href="#" target="_blank" download>&#11123; Download</a>
-        <button class="pdf-close-btn" id="pdf-modal-close" aria-label="Close">&#10005;</button>
-      </div>
-    </div>
-    <div class="pdf-pages-wrap" id="pdf-pages-wrap">
-      <div class="pdf-spinner" id="pdf-spinner">Loading PDF&hellip;</div>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
 <script>
 /* ══════════════════════════════════════════════
    CONFIG
@@ -1824,7 +1666,6 @@ function setupCvBlock(candidate) {
   const results   = $(`f-${candidate}-cv-results`);
   const chip      = $(`f-${candidate}-cv-chip`);
   const chipName  = $(`f-${candidate}-cv-chip-name`);
-  const viewBtn   = $(`btn-${candidate}-cv`);
   const clearBtn  = $(`btn-${candidate}-cv-clear`);
 
   let activeIdx = -1;   // keyboard-navigation cursor
@@ -1949,7 +1790,6 @@ function setupCvBlock(candidate) {
     }
   });
 
-  viewBtn.addEventListener('click',  () => { const e = getCvEntry(candidate); if (e) openPdfModal(e); });
   clearBtn.addEventListener('click', clearSelection);
 }
 
@@ -2279,42 +2119,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ══════════════════════════════════════════════
-   PDF MODAL (PDF.js)
-══════════════════════════════════════════════ */
-async function openPdfModal(entry) {
-  if (!entry) return;
-  const { previewUrl, downloadUrl, label } = entry;
-  const modal   = $('pdf-modal');
-  const wrap    = $('pdf-pages-wrap');
-  const spinner = $('pdf-spinner');
-
-  $('pdf-modal-name').textContent = label.replace(' - CV Simpalm Staffing.pdf', '');
-  $('pdf-modal-dl').href = downloadUrl;
-  $('pdf-modal-dl').setAttribute('download', decodeURIComponent(downloadUrl.split('/').pop().split('?')[0]));
-
-  wrap.innerHTML = '';
-  spinner.style.display = 'flex';
-  wrap.appendChild(spinner);
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  // Google Docs Viewer handles GitHub raw URLs without CORS issues.
-  // Drive URLs are blocked by the Workspace admin — we never use them.
-  spinner.style.display = 'none';
-  const iframe = document.createElement('iframe');
-  iframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true`;
-  iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:500px;display:block;background:#353B4F;';
-  wrap.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;padding:0;';
-  wrap.appendChild(iframe);
-}
-
-function closePdfModal() {
-  const modal = $('pdf-modal');
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-/* ══════════════════════════════════════════════
    BOOT
 ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -2338,11 +2142,6 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-preview').addEventListener('click', openPreview);
   $('btn-reset').addEventListener('click', resetForm);
   $('btn-logout').addEventListener('click', doLogout);
-
-  // PDF modal close
-  $('pdf-modal-close').addEventListener('click', closePdfModal);
-  $('pdf-backdrop').addEventListener('click', closePdfModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePdfModal(); });
 
   if (loggedIn()) showApp();
 });
