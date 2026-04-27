@@ -715,6 +715,100 @@
       margin-top: 2px;
     }
 
+    /* ── Pipeline: select + process ── */
+    .pl-processor { padding: 10px 10px 0; }
+
+    .pl-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .pl-select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: var(--dark);
+      outline: none;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: border-color .18s;
+    }
+    .pl-select:focus { border-color: var(--green); }
+
+    .pl-btn-process {
+      width: 100%;
+      height: 34px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .pl-btn-process:disabled { opacity: .38; cursor: default; }
+    .pl-btn-process:not(:disabled):hover { background: var(--green-dark); }
+
+    .pl-proc-status {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--card);
+      border: 1px solid var(--border-lt);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--mid);
+      line-height: 1.5;
+      display: none;
+    }
+
+    .pl-divider {
+      border: none;
+      border-top: 1px solid var(--border-lt);
+      margin: 10px 0 0;
+    }
+
+    .pl-proc-head {
+      padding: 8px 10px 4px;
+    }
+
+    .pl-processed-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-lt);
+      font-size: 11px;
+    }
+    .pl-processed-item:last-child { border-bottom: none; }
+    .pl-processed-name {
+      flex: 1;
+      font-weight: 600;
+      color: var(--dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pl-processed-time {
+      font-size: 10px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
     /* Responsive */
     @media (max-width: 900px) {
       :root { --sidebar-w: 320px; }
@@ -774,17 +868,35 @@
     <aside class="sidebar">
       <div class="sidebar-inner">
 
-        <!-- ══ CV PIPELINE MONITOR ══ -->
+        <!-- ══ CV PIPELINE ══ -->
         <div class="pl-sec" id="pl-sec">
           <div class="pl-head">
             <span class="pl-head-title">📂 CV Pipeline</span>
-            <div class="pl-actions">
-              <button class="pl-btn pl-btn-refresh" id="pl-btn-refresh" title="Refresh status">⟳ Refresh</button>
-              <button class="pl-btn pl-btn-trigger" id="pl-btn-trigger" title="Manually trigger processing">⚡ Trigger Now</button>
-            </div>
+            <button class="pl-btn pl-btn-refresh" id="pl-btn-refresh" title="Refresh inbox">⟳ Refresh</button>
           </div>
           <div class="pl-body" id="pl-body">
-            <div class="pl-empty" id="pl-empty">Loading pipeline status…</div>
+
+            <!-- Step 1: Select & trigger -->
+            <div class="pl-processor">
+              <label class="pl-label">Select CV to process</label>
+              <select class="pl-select" id="pl-cv-select">
+                <option value="">Loading Drive inbox…</option>
+              </select>
+              <button class="pl-btn-process" id="pl-btn-trigger" disabled>
+                ⚡ Process Selected CV
+              </button>
+              <div class="pl-proc-status" id="pl-proc-status"></div>
+            </div>
+
+            <!-- Step 2: Already processed -->
+            <hr class="pl-divider">
+            <div class="pl-proc-head">
+              <span class="pl-label" style="margin-bottom:0">Processed CVs</span>
+            </div>
+            <div id="pl-processed-list">
+              <div class="pl-empty">No processed CVs yet.</div>
+            </div>
+
           </div>
           <div class="pl-footer" id="pl-footer">Last checked: —</div>
         </div>
@@ -1621,7 +1733,7 @@ function showApp() {
   setupCvBlock('c2');
   updatePreview();
   loadCvIndex();
-  loadPipelineStatus();
+  loadInboxFiles();   // populate pipeline dropdown from Drive inbox
 }
 
 /* ══════════════════════════════════════════════
@@ -1818,47 +1930,49 @@ async function loadCvIndex() {
 }
 
 /* ══════════════════════════════════════════════
-   CV PIPELINE MONITOR
+   CV PIPELINE
 ══════════════════════════════════════════════ */
 
-let _plPollTimer   = null;        // interval handle while processing
-let _plTriggeredAt = null;        // timestamp of last manual trigger
-let _pendingCVNames = new Set();  // names that were pending in the last poll
+// State
+let _pollTimer          = null;   // interval while GH Actions is running
+let _elapsedTimer       = null;   // interval updating elapsed time display
+let _processingFilename = null;   // Drive filename currently being processed
+let _processingStarted  = null;   // Date.now() when push was sent
 
-// How long GitHub Actions typically takes (ms) — shown as estimated wait
-const PL_ESTIMATE_MS = 2.5 * 60 * 1000;  // 2.5 min
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-// ── CV-ready notification ─────────────────────────────────────────────────────
+function _plNow()  { return new Date(); }
+function _plFmt(d) { return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+function _plAgo(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 60000) return 'just now';
+  const m = Math.round(ms / 60000);
+  return m < 60 ? `${m}m ago` : `${Math.round(m/60)}h ago`;
+}
+
+// ── Desktop + in-app notification ────────────────────────────────────────────
 
 async function _requestNotifPermission() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
+  if ('Notification' in window && Notification.permission === 'default')
     await Notification.requestPermission();
-  }
 }
 
 function _cvNotify(names) {
-  // In-app banner (always)
-  const who = names.length === 1 ? `${names[0]}` : `${names.length} CVs`;
+  const who = names.length === 1 ? names[0] : `${names.length} CVs`;
   toastReady(`✅ ${who} ready to send!`);
-
-  // Desktop notification (if permission granted)
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const body = names.length === 1
-    ? `${names[0]}'s CV has been processed and is ready to send.`
-    : `${names.join(', ')} — CVs processed and ready to send.`;
   const n = new Notification('PalmDeck · CV Ready ✅', {
-    body,
+    body: names.length === 1
+      ? `${names[0]}'s CV has been processed and is ready to send.`
+      : `${names.join(', ')} — CVs processed and ready to send.`,
     icon: 'https://simpalmstaffing.com/wp-content/uploads/2025/08/simpalm-staffing-logo.svg',
-    tag:  'palmdeck-cv-ready',
-    renotify: true,
+    tag: 'palmdeck-cv-ready', renotify: true,
   });
   n.onclick = () => { window.focus(); n.close(); };
   setTimeout(() => n.close(), 10_000);
 }
 
 function toastReady(msg) {
-  // A distinct "ready" banner above the pipeline widget
   let banner = document.getElementById('pl-ready-banner');
   if (!banner) {
     banner = document.createElement('div');
@@ -1871,16 +1985,17 @@ function toastReady(msg) {
       'display:flex;align-items:center;gap:10px;z-index:9999',
       'opacity:0;transition:opacity .3s,transform .3s;cursor:pointer',
     ].join(';');
-    banner.onclick = () => { banner.style.opacity = '0'; banner.style.transform = 'translateX(-50%) translateY(-20px)'; };
+    banner.onclick = () => {
+      banner.style.opacity = '0';
+      banner.style.transform = 'translateX(-50%) translateY(-20px)';
+    };
     document.body.appendChild(banner);
   }
   banner.innerHTML = `<span style="font-size:18px">✅</span><span>${msg}</span>`;
-  // Animate in
   requestAnimationFrame(() => {
     banner.style.opacity = '1';
     banner.style.transform = 'translateX(-50%) translateY(0)';
   });
-  // Auto-hide after 12s
   clearTimeout(banner._hideTimer);
   banner._hideTimer = setTimeout(() => {
     banner.style.opacity = '0';
@@ -1888,157 +2003,95 @@ function toastReady(msg) {
   }, 12_000);
 }
 
-function _plNow()   { return new Date(); }
-function _plFmt(d)  {
-  if (!d) return '—';
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-function _plAgo(iso) {
-  const ms = Date.now() - new Date(iso).getTime();
-  if (ms < 60000) return 'just now';
-  const m = Math.round(ms / 60000);
-  return `${m} min ago`;
-}
-function _plEtaStr(uploadedIso) {
-  const elapsed = Date.now() - new Date(uploadedIso).getTime();
-  const remaining = PL_ESTIMATE_MS - elapsed;
-  if (remaining <= 0) return 'any moment now';
-  const m = Math.ceil(remaining / 60000);
-  return `~${m} min remaining`;
-}
+// ── Load Drive inbox → populate dropdown ─────────────────────────────────────
+// Fetches ALL raw files from Drive (even unprocessed ones) and renders them in
+// the "Select CV to process" dropdown. Already-processed CVs are marked with ✅.
 
-async function loadPipelineStatus() {
-  const body    = $('pl-body');
-  const footer  = $('pl-footer');
-  const emptyEl = $('pl-empty');
+async function loadInboxFiles() {
+  const select   = $('pl-cv-select');
+  const procList = $('pl-processed-list');
+  const footer   = $('pl-footer');
+  const btn      = $('pl-btn-trigger');
 
-  // ── Fetch status ──────────────────────────────────────────────
-  // GitHub index.json is the single source of truth for processed CVs.
-  // Drive status (?action=status) is only used to find unprocessed uploads.
-  let uploaded  = [];
-  let processed = [];
-  let ts        = _plNow();
+  let inboxFiles   = [];
+  let processedCVs = [];
 
-  // 1. Always fetch processed CVs from GitHub (never Drive — admin blocks Drive URLs)
-  try {
-    const ghRes = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
-    if (ghRes.ok) processed = await ghRes.json();
-  } catch { /* use empty list */ }
-
-  // 2. Optionally fetch Drive upload list to detect unprocessed originals
+  // Fetch raw Drive inbox files
   if (CV_DRIVE_INDEX_URL) {
     try {
-      const res  = await fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now());
-      const data = await res.json();
-      uploaded   = data.uploaded || [];
-      ts         = data.ts ? new Date(data.ts) : ts;
-    } catch { /* Drive unreachable — no pending info available */ }
+      const r = await fetch(CV_DRIVE_INDEX_URL + '?action=list_inbox&t=' + Date.now());
+      if (r.ok) inboxFiles = await r.json();
+    } catch { /* Drive unreachable */ }
   }
 
-  // ── Build items ───────────────────────────────────────────────
-  // Set of candidate names already accounted for (case-insensitive)
-  const readyNames = new Set(processed.map(p => (p.name || '').toLowerCase()));
+  // Fetch already-processed CVs from GitHub
+  try {
+    const r = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
+    if (r.ok) processedCVs = await r.json();
+  } catch { /* GH unreachable */ }
 
-  const items = [];
+  // Build lookup: which Drive filenames are already processed?
+  const processedSet = new Set(
+    processedCVs.map(p => (p.source_file || '').split('/').pop())
+  );
 
-  // Processed CVs — always use GitHub raw URL (Drive URLs are blocked)
-  processed.forEach(p => {
-    items.push({ status: 'ready', name: p.name, filename: p.filename,
-                 ts: p.processed,
-                 viewUrl: CV_RAW_BASE + encodeURIComponent(p.filename) });
-  });
+  // ── Populate select dropdown ──────────────────────────────────
+  const prevVal = select.value;
+  select.innerHTML = '';
 
-  // Uploaded to Drive but NOT yet processed — use name-based match (not filename substring)
-  uploaded.forEach(u => {
-    // Strip extension and numeric prefixes to get the human name
-    const cleanName = u.name
-      .replace(/\.(pdf|docx?)$/i, '')
-      .replace(/^\d+/, '')
-      .replace(/[-_]/g, ' ')
-      .trim()
-      .toLowerCase();
-    // Consider it pending only if no ready CV name contains any token of the upload name
-    const tokens = cleanName.split(/\s+/).filter(t => t.length > 2);
-    const alreadyIn = tokens.length === 0 || tokens.some(t =>
-      [...readyNames].some(rn => rn.includes(t))
-    );
-    if (!alreadyIn) {
-      items.push({ status: 'pending', name: u.name, ts: u.created });
-    }
-  });
-
-  // ── Detect pending → ready transitions and notify ────────────
-  if (_pendingCVNames.size > 0) {
-    const nowReady = items
-      .filter(i => i.status === 'ready' && _pendingCVNames.has(i.name))
-      .map(i => i.name);
-    if (nowReady.length > 0) _cvNotify(nowReady);
-  }
-  // Update pending tracker for next poll
-  _pendingCVNames = new Set(items.filter(i => i.status === 'pending').map(i => i.name));
-
-  // ── Render ────────────────────────────────────────────────────
-  const hasPending = items.some(i => i.status === 'pending');
-
-  if (!items.length) {
-    body.innerHTML = '<div class="pl-empty">No CVs in the Drive folder yet.</div>';
+  if (inboxFiles.error || !CV_DRIVE_INDEX_URL) {
+    select.innerHTML = '<option value="">⚠️ Drive inbox unavailable</option>';
+  } else if (!Array.isArray(inboxFiles) || inboxFiles.length === 0) {
+    select.innerHTML = '<option value="">No CVs in Drive inbox yet</option>';
   } else {
-    const total   = items.length;
-    const ready   = items.filter(i => i.status === 'ready').length;
-    const pending = items.filter(i => i.status === 'pending').length;
-    const pct     = Math.round((ready / total) * 100);
-    const etaMins = Math.ceil(pending * 2.5); // ~2–3 min per CV via GitHub Actions
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '— Select a CV to process —';
+    select.appendChild(placeholder);
 
-    body.innerHTML = `
-      <div class="pl-stats">
-        <div class="pl-stat">
-          <span class="pl-stat-num">${total}</span>
-          <span class="pl-stat-lbl">Total</span>
-        </div>
-        <span class="pl-stat-sep">·</span>
-        <div class="pl-stat pl-stat-ready">
-          <span class="pl-stat-num">✅ ${ready}</span>
-          <span class="pl-stat-lbl">Ready</span>
-        </div>
-        <span class="pl-stat-sep">·</span>
-        <div class="pl-stat pl-stat-pend">
-          <span class="pl-stat-num">${pending > 0 ? '<span class="pl-pulse"></span>' : ''}${pending}</span>
-          <span class="pl-stat-lbl">Processing</span>
-        </div>
-      </div>
-      <div class="pl-bar-wrap">
-        <div class="pl-bar-fill" style="width:${pct}%"></div>
-      </div>
-      <div class="pl-bar-meta">
-        <span class="pl-pct">${pct}%</span>
-        ${pending > 0
-          ? `<span class="pl-eta">ETA ~${etaMins} min</span>`
-          : `<span class="pl-eta pl-done">All done ✓</span>`}
-      </div>`;
+    inboxFiles.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.dataset.name = f.name;
+      opt.dataset.processed = processedSet.has(f.name) ? '1' : '0';
+      opt.textContent = (processedSet.has(f.name) ? '✅ ' : '⏳ ') + f.name;
+      select.appendChild(opt);
+    });
+
+    // Restore previous selection if still available
+    if (prevVal) select.value = prevVal;
   }
 
-  if (ts) footer.textContent = `Last checked: ${_plFmt(ts)}`;
+  // Enable trigger button only when a CV is selected AND not currently processing
+  if (btn && !_processingFilename) {
+    btn.disabled = !select.value;
+  }
 
-  // ── Auto-poll while there are pending CVs ────────────────────
-  if (hasPending) {
-    if (!_plPollTimer) {
-      _plPollTimer = setInterval(loadPipelineStatus, 30_000);
-    }
+  // ── Render processed CVs list ─────────────────────────────────
+  if (!processedCVs.length) {
+    procList.innerHTML = '<div class="pl-empty">No processed CVs yet.</div>';
   } else {
-    clearInterval(_plPollTimer);
-    _plPollTimer = null;
+    procList.innerHTML = processedCVs
+      .slice()
+      .sort((a, b) => new Date(b.processed) - new Date(a.processed))
+      .map(p => `
+        <div class="pl-processed-item">
+          <span>✅</span>
+          <span class="pl-processed-name" title="${p.name}">${p.name}</span>
+          <span class="pl-processed-time">${_plAgo(p.processed)}</span>
+        </div>`)
+      .join('');
   }
 
-  // Refresh the CV search index — always use GitHub-sourced processed list
-  // (this keeps the search dropdown in sync with what's actually processed)
-  if (processed.length) {
-    cvIndex = processed;   // these are clean GitHub index entries, no Drive URLs
-    ['c1','c2'].forEach(c => {
+  // ── Sync c1/c2 candidate dropdowns with processed list ────────
+  if (processedCVs.length) {
+    cvIndex = processedCVs;
+    ['c1', 'c2'].forEach(c => {
       const sel = $(`f-${c}-cv-registry`);
       if (!sel) return;
       const prev = sel.value;
       sel.innerHTML = '<option value=""></option>';
-      processed.forEach(cv => {
+      processedCVs.forEach(cv => {
         const o = document.createElement('option');
         o.value = cv.filename;
         o.textContent = cv.name;
@@ -2047,75 +2100,128 @@ async function loadPipelineStatus() {
       if (prev) sel.value = prev;
     });
   }
+
+  footer.textContent = `Last checked: ${_plFmt(_plNow())}`;
 }
 
-async function triggerPipeline() {
-  const btn = $('pl-btn-trigger');
-  if (!CV_DRIVE_INDEX_URL) {
-    toast('⚠️ Apps Script Web App not configured.');
-    return;
-  }
-  btn.disabled = true;
-  btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Triggering…';
-  _plTriggeredAt = Date.now();
+// ── Process selected CV ───────────────────────────────────────────────────────
+// Reads the Drive file ID from the dropdown, pushes it to GitHub inbox via
+// Apps Script push_and_trigger, then polls index.json every 5s until done.
 
-  // Request notification permission on the first trigger click (user gesture required)
+async function processSelectedCV() {
+  const select = $('pl-cv-select');
+  const btn    = $('pl-btn-trigger');
+  const status = $('pl-proc-status');
+
+  const fileId   = select.value;
+  const opt      = select.options[select.selectedIndex];
+  const fileName = opt?.dataset?.name || select.options[select.selectedIndex]?.textContent?.replace(/^[✅⏳]\s*/, '') || fileId;
+
+  if (!fileId || !CV_DRIVE_INDEX_URL) return;
+
+  // Lock UI
+  btn.disabled = true;
+  btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Pushing to GitHub…';
+  status.style.display = 'block';
+  status.innerHTML = `<span class="pl-pulse"></span> Uploading <strong>${fileName}</strong> to GitHub…`;
+
   await _requestNotifPermission();
 
   try {
-    // Collect source_file paths for selected CVs (c1, c2)
-    // source_file is stored in index.json by process_cv.py (e.g. "inbox/Juan Carlos-DE.pdf")
-    const selectedFiles = ['c1', 'c2']
-      .map(c => {
-        const fn = $(`f-${c}-cv-registry`)?.value?.trim();
-        if (!fn) return null;
-        const entry = cvIndex.find(e => e.filename === fn);
-        return entry?.source_file || null;  // e.g. "inbox/Juan Carlos-DE.pdf"
-      })
-      .filter(Boolean);
-
-    let url = CV_DRIVE_INDEX_URL + '?action=trigger&t=' + Date.now();
-    if (selectedFiles.length) {
-      // Selective trigger — only reprocess the chosen CVs
-      url += '&files=' + encodeURIComponent(selectedFiles.join('|'));
-    }
-    // If nothing selected → full trigger (process all inbox CVs)
-
+    const url = `${CV_DRIVE_INDEX_URL}?action=push_and_trigger&file_id=${encodeURIComponent(fileId)}&t=${Date.now()}`;
     const res  = await fetch(url);
     const data = await res.json();
-    if (data.ok) {
-      const who = selectedFiles.length
-        ? `${selectedFiles.length} selected CV(s)`
-        : 'all inbox CVs';
-      toast(`⚡ Triggered reprocessing of ${who}. Ready in ~2–3 min.`);
-      // Seed pending-tracker with the names we just triggered
-      // so the next poll can detect when they flip to ready
-      if (selectedFiles.length) {
-        const triggeredNames = selectedFiles.map(sf => {
-          const entry = cvIndex.find(e => e.source_file === sf);
-          return entry ? entry.name : sf.split('/').pop().replace(/\.(pdf|docx?)$/i, '');
-        });
-        triggeredNames.forEach(n => _pendingCVNames.add(n));
-      }
-      clearInterval(_plPollTimer);
-      _plPollTimer = setInterval(loadPipelineStatus, 30_000);
-      await loadPipelineStatus();
-    } else {
-      toast('❌ Trigger failed: ' + (data.error || 'unknown error'), 'err');
+
+    if (!data.ok) {
+      status.innerHTML = `❌ Error: ${data.error || 'Unknown error'}`;
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Process Selected CV';
+      return;
     }
+
+    // Push succeeded — start tracking
+    _processingFilename = data.filename || fileName;
+    _processingStarted  = Date.now();
+    btn.innerHTML = '⏳ Processing…';
+
+    // Live elapsed-time counter (updates every second)
+    _elapsedTimer = setInterval(() => {
+      const s   = Math.floor((Date.now() - _processingStarted) / 1000);
+      const min = Math.floor(s / 60);
+      const sec = s % 60;
+      const t   = min > 0 ? `${min}m ${sec}s` : `${sec}s`;
+      status.innerHTML =
+        `<span class="pl-pulse"></span> GitHub Actions processing… <strong>${t}</strong> elapsed<br>` +
+        `<span style="font-size:10px;color:var(--muted)">Typically completes in 2–3 min</span>`;
+    }, 1000);
+
+    // Poll index.json every 5 s to detect completion
+    _pollTimer = setInterval(() => _pollForCV(_processingFilename), 5000);
+
   } catch (err) {
-    toast('❌ Network error: ' + err.message, 'err');
-  } finally {
-    setTimeout(() => { btn.disabled = false; btn.innerHTML = '⚡ Trigger Now'; }, 5000);
+    status.innerHTML = `❌ Network error: ${err.message}`;
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Process Selected CV';
+    _processingFilename = null;
   }
 }
 
-// Wire up buttons
+// ── Poll index.json until the processed CV appears ───────────────────────────
+
+async function _pollForCV(driveFilename) {
+  try {
+    const res = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
+    if (!res.ok) return;
+    const index = await res.json();
+
+    // Match by source_file (exact filename, ignoring possible "inbox/" prefix)
+    const found = index.find(e => {
+      const src = (e.source_file || '').split('/').pop();
+      return src === driveFilename || e.source_file === driveFilename;
+    });
+
+    if (!found) return; // not ready yet — keep polling
+
+    // ── Done! ────────────────────────────────────────────────────
+    clearInterval(_pollTimer);
+    clearInterval(_elapsedTimer);
+    _pollTimer    = null;
+    _elapsedTimer = null;
+
+    const elapsed = Math.floor((Date.now() - _processingStarted) / 1000);
+    const timeStr = elapsed >= 60 ? `${Math.floor(elapsed/60)}m ${elapsed%60}s` : `${elapsed}s`;
+
+    const status = $('pl-proc-status');
+    const btn    = $('pl-btn-trigger');
+
+    status.innerHTML =
+      `✅ <strong>${found.name}</strong> processed in ${timeStr}.<br>` +
+      `<span style="font-size:10px;color:var(--muted)">Now available in the candidate list below.</span>`;
+
+    _processingFilename = null;
+    btn.innerHTML = '⚡ Process Selected CV';
+    btn.disabled  = !$('pl-cv-select').value;
+
+    _cvNotify([found.name]);
+
+    // Refresh everything: inbox dropdown + processed list + c1/c2 dropdowns
+    await loadInboxFiles();
+
+  } catch { /* ignore transient poll errors */ }
+}
+
+// Wire up pipeline buttons + dropdown change
 document.addEventListener('DOMContentLoaded', () => {
-  const rBtn = $('pl-btn-refresh');
-  const tBtn = $('pl-btn-trigger');
-  if (rBtn) rBtn.addEventListener('click', () => { loadPipelineStatus(); });
-  if (tBtn) tBtn.addEventListener('click', () => { triggerPipeline(); });
+  const rBtn   = $('pl-btn-refresh');
+  const tBtn   = $('pl-btn-trigger');
+  const select = $('pl-cv-select');
+
+  if (rBtn)   rBtn.addEventListener('click',  () => loadInboxFiles());
+  if (tBtn)   tBtn.addEventListener('click',  () => processSelectedCV());
+  if (select) select.addEventListener('change', () => {
+    // Enable/disable trigger based on selection (only if not mid-processing)
+    if (!_processingFilename && tBtn) tBtn.disabled = !select.value;
+  });
 });
 
 /* ══════════════════════════════════════════════
