@@ -1743,6 +1743,8 @@ function showApp() {
 const CV_DRIVE_INDEX_URL = 'https://script.google.com/macros/s/AKfycbxtuV5xUX4_wUeBqgaGxoLHDaFJtPD7UI6_ChgGAQPigoUohe91NRfmA4N6ikBdqaEq/exec'; // leo@simpalm.com
 const CV_GH_INDEX_URL    = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/index.json';
 const CV_RAW_BASE        = 'https://raw.githubusercontent.com/ldsjunior-ui/simpalm-cv-automation/main/processed/';
+// GitHub Contents API — lists files in inbox/ without auth (public repo)
+const CV_GH_INBOX_API    = 'https://api.github.com/repos/ldsjunior-ui/simpalm-cv-automation/contents/inbox';
 
 let cvIndex = [];
 
@@ -2003,9 +2005,11 @@ function toastReady(msg) {
   }, 12_000);
 }
 
-// ── Load Drive inbox → populate dropdown ─────────────────────────────────────
-// Fetches ALL raw files from Drive (even unprocessed ones) and renders them in
-// the "Select CV to process" dropdown. Already-processed CVs are marked with ✅.
+// ── Load GitHub inbox → populate dropdown ────────────────────────────────────
+// Uses the GitHub Contents API (public repo, no auth) to list files in inbox/.
+// Compares with index.json to mark which are ✅ processed vs ⏳ pending.
+// Trigger uses the existing ?action=trigger&files=inbox/filename endpoint —
+// no Apps Script redeployment needed.
 
 async function loadInboxFiles() {
   const select   = $('pl-cv-select');
@@ -2016,21 +2020,27 @@ async function loadInboxFiles() {
   let inboxFiles   = [];
   let processedCVs = [];
 
-  // Fetch raw Drive inbox files
-  if (CV_DRIVE_INDEX_URL) {
-    try {
-      const r = await fetch(CV_DRIVE_INDEX_URL + '?action=list_inbox&t=' + Date.now());
-      if (r.ok) inboxFiles = await r.json();
-    } catch { /* Drive unreachable */ }
-  }
+  // 1. GitHub Contents API — lists raw files in inbox/ (public repo, no token)
+  try {
+    const r = await fetch(CV_GH_INBOX_API + '?ref=main&t=' + Date.now(), {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    });
+    if (r.ok) {
+      const all = await r.json();
+      // Keep only PDF/DOCX, exclude .trigger, .gitkeep and other meta files
+      inboxFiles = Array.isArray(all)
+        ? all.filter(f => f.type === 'file' && /\.(pdf|docx?)$/i.test(f.name))
+        : [];
+    }
+  } catch { /* GH unreachable */ }
 
-  // Fetch already-processed CVs from GitHub
+  // 2. GitHub index.json — source of truth for processed CVs
   try {
     const r = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
     if (r.ok) processedCVs = await r.json();
   } catch { /* GH unreachable */ }
 
-  // Build lookup: which Drive filenames are already processed?
+  // Build lookup: processed source filenames
   const processedSet = new Set(
     processedCVs.map(p => (p.source_file || '').split('/').pop())
   );
@@ -2039,10 +2049,8 @@ async function loadInboxFiles() {
   const prevVal = select.value;
   select.innerHTML = '';
 
-  if (inboxFiles.error || !CV_DRIVE_INDEX_URL) {
-    select.innerHTML = '<option value="">⚠️ Drive inbox unavailable</option>';
-  } else if (!Array.isArray(inboxFiles) || inboxFiles.length === 0) {
-    select.innerHTML = '<option value="">No CVs in Drive inbox yet</option>';
+  if (inboxFiles.length === 0) {
+    select.innerHTML = '<option value="">No CVs in GitHub inbox yet</option>';
   } else {
     const placeholder = document.createElement('option');
     placeholder.value = '';
@@ -2050,19 +2058,19 @@ async function loadInboxFiles() {
     select.appendChild(placeholder);
 
     inboxFiles.forEach(f => {
+      const isProcessed = processedSet.has(f.name);
       const opt = document.createElement('option');
-      opt.value = f.id;
+      opt.value = f.name;               // filename used as value
       opt.dataset.name = f.name;
-      opt.dataset.processed = processedSet.has(f.name) ? '1' : '0';
-      opt.textContent = (processedSet.has(f.name) ? '✅ ' : '⏳ ') + f.name;
+      opt.dataset.processed = isProcessed ? '1' : '0';
+      opt.textContent = (isProcessed ? '✅ ' : '⏳ ') + f.name;
       select.appendChild(opt);
     });
 
-    // Restore previous selection if still available
     if (prevVal) select.value = prevVal;
   }
 
-  // Enable trigger button only when a CV is selected AND not currently processing
+  // Enable/disable trigger button
   if (btn && !_processingFilename) {
     btn.disabled = !select.value;
   }
@@ -2083,7 +2091,7 @@ async function loadInboxFiles() {
       .join('');
   }
 
-  // ── Sync c1/c2 candidate dropdowns with processed list ────────
+  // ── Sync c1/c2 candidate dropdowns ───────────────────────────
   if (processedCVs.length) {
     cvIndex = processedCVs;
     ['c1', 'c2'].forEach(c => {
@@ -2105,46 +2113,45 @@ async function loadInboxFiles() {
 }
 
 // ── Process selected CV ───────────────────────────────────────────────────────
-// Reads the Drive file ID from the dropdown, pushes it to GitHub inbox via
-// Apps Script push_and_trigger, then polls index.json every 5s until done.
+// Calls the EXISTING Apps Script ?action=trigger&files=inbox/filename endpoint
+// (already deployed — no redeployment needed). That action re-pushes the file
+// to GitHub which fires GH Actions for ONLY that one file.
 
 async function processSelectedCV() {
-  const select = $('pl-cv-select');
-  const btn    = $('pl-btn-trigger');
-  const status = $('pl-proc-status');
+  const select   = $('pl-cv-select');
+  const btn      = $('pl-btn-trigger');
+  const status   = $('pl-proc-status');
+  const fileName = select.value;   // value is the inbox filename
 
-  const fileId   = select.value;
-  const opt      = select.options[select.selectedIndex];
-  const fileName = opt?.dataset?.name || select.options[select.selectedIndex]?.textContent?.replace(/^[✅⏳]\s*/, '') || fileId;
-
-  if (!fileId || !CV_DRIVE_INDEX_URL) return;
+  if (!fileName || !CV_DRIVE_INDEX_URL) return;
 
   // Lock UI
   btn.disabled = true;
-  btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Pushing to GitHub…';
+  btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Triggering…';
   status.style.display = 'block';
-  status.innerHTML = `<span class="pl-pulse"></span> Uploading <strong>${fileName}</strong> to GitHub…`;
+  status.innerHTML = `<span class="pl-pulse"></span> Sending <strong>${fileName}</strong> to GitHub Actions…`;
 
   await _requestNotifPermission();
 
   try {
-    const url = `${CV_DRIVE_INDEX_URL}?action=push_and_trigger&file_id=${encodeURIComponent(fileId)}&t=${Date.now()}`;
+    // Use the existing selective trigger — re-pushes this inbox file → GH Actions fires
+    const url = `${CV_DRIVE_INDEX_URL}?action=trigger&files=${encodeURIComponent('inbox/' + fileName)}&t=${Date.now()}`;
     const res  = await fetch(url);
     const data = await res.json();
 
     if (!data.ok) {
-      status.innerHTML = `❌ Error: ${data.error || 'Unknown error'}`;
+      status.innerHTML = `❌ ${data.error || data.message || 'Trigger failed — check Apps Script logs.'}`;
       btn.disabled = false;
       btn.innerHTML = '⚡ Process Selected CV';
       return;
     }
 
-    // Push succeeded — start tracking
-    _processingFilename = data.filename || fileName;
+    // Triggered — start real-time tracking
+    _processingFilename = fileName;
     _processingStarted  = Date.now();
     btn.innerHTML = '⏳ Processing…';
 
-    // Live elapsed-time counter (updates every second)
+    // Live elapsed-time counter (1s intervals)
     _elapsedTimer = setInterval(() => {
       const s   = Math.floor((Date.now() - _processingStarted) / 1000);
       const min = Math.floor(s / 60);
@@ -2152,10 +2159,10 @@ async function processSelectedCV() {
       const t   = min > 0 ? `${min}m ${sec}s` : `${sec}s`;
       status.innerHTML =
         `<span class="pl-pulse"></span> GitHub Actions processing… <strong>${t}</strong> elapsed<br>` +
-        `<span style="font-size:10px;color:var(--muted)">Typically completes in 2–3 min</span>`;
+        `<span style="font-size:10px;color:var(--muted)">Typically ready in 2–3 min</span>`;
     }, 1000);
 
-    // Poll index.json every 5 s to detect completion
+    // Poll index.json every 5s for completion
     _pollTimer = setInterval(() => _pollForCV(_processingFilename), 5000);
 
   } catch (err) {
@@ -2168,19 +2175,19 @@ async function processSelectedCV() {
 
 // ── Poll index.json until the processed CV appears ───────────────────────────
 
-async function _pollForCV(driveFilename) {
+async function _pollForCV(inboxFilename) {
   try {
     const res = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
     if (!res.ok) return;
     const index = await res.json();
 
-    // Match by source_file (exact filename, ignoring possible "inbox/" prefix)
+    // Match by source_file (GH Actions writes source_file = inbox filename)
     const found = index.find(e => {
       const src = (e.source_file || '').split('/').pop();
-      return src === driveFilename || e.source_file === driveFilename;
+      return src === inboxFilename;
     });
 
-    if (!found) return; // not ready yet — keep polling
+    if (!found) return; // not done yet
 
     // ── Done! ────────────────────────────────────────────────────
     clearInterval(_pollTimer);
@@ -2195,7 +2202,7 @@ async function _pollForCV(driveFilename) {
     const btn    = $('pl-btn-trigger');
 
     status.innerHTML =
-      `✅ <strong>${found.name}</strong> processed in ${timeStr}.<br>` +
+      `✅ <strong>${found.name}</strong> ready in ${timeStr}.<br>` +
       `<span style="font-size:10px;color:var(--muted)">Now available in the candidate list below.</span>`;
 
     _processingFilename = null;
@@ -2203,11 +2210,9 @@ async function _pollForCV(driveFilename) {
     btn.disabled  = !$('pl-cv-select').value;
 
     _cvNotify([found.name]);
+    await loadInboxFiles();  // refresh dropdown + processed list + c1/c2
 
-    // Refresh everything: inbox dropdown + processed list + c1/c2 dropdowns
-    await loadInboxFiles();
-
-  } catch { /* ignore transient poll errors */ }
+  } catch { /* ignore transient errors */ }
 }
 
 // Wire up pipeline buttons + dropdown change
