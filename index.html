@@ -888,14 +888,6 @@
               <div class="pl-proc-status" id="pl-proc-status"></div>
             </div>
 
-            <!-- Step 2: Already processed -->
-            <hr class="pl-divider">
-            <div class="pl-proc-head">
-              <span class="pl-label" style="margin-bottom:0">Processed CVs</span>
-            </div>
-            <div id="pl-processed-list">
-              <div class="pl-empty">No processed CVs yet.</div>
-            </div>
 
           </div>
           <div class="pl-footer" id="pl-footer">Last checked: —</div>
@@ -2012,10 +2004,9 @@ function toastReady(msg) {
 // no Apps Script redeployment needed.
 
 async function loadInboxFiles() {
-  const select   = $('pl-cv-select');
-  const procList = $('pl-processed-list');
-  const footer   = $('pl-footer');
-  const btn      = $('pl-btn-trigger');
+  const select = $('pl-cv-select');
+  const footer = $('pl-footer');
+  const btn    = $('pl-btn-trigger');
 
   let inboxFiles   = [];
   let processedCVs = [];
@@ -2075,22 +2066,6 @@ async function loadInboxFiles() {
     btn.disabled = !select.value;
   }
 
-  // ── Render processed CVs list ─────────────────────────────────
-  if (!processedCVs.length) {
-    procList.innerHTML = '<div class="pl-empty">No processed CVs yet.</div>';
-  } else {
-    procList.innerHTML = processedCVs
-      .slice()
-      .sort((a, b) => new Date(b.processed) - new Date(a.processed))
-      .map(p => `
-        <div class="pl-processed-item">
-          <span>✅</span>
-          <span class="pl-processed-name" title="${p.name}">${p.name}</span>
-          <span class="pl-processed-time">${_plAgo(p.processed)}</span>
-        </div>`)
-      .join('');
-  }
-
   // ── Sync c1/c2 candidate dropdowns ───────────────────────────
   if (processedCVs.length) {
     cvIndex = processedCVs;
@@ -2121,15 +2096,24 @@ async function processSelectedCV() {
   const select   = $('pl-cv-select');
   const btn      = $('pl-btn-trigger');
   const status   = $('pl-proc-status');
-  const fileName = select.value;   // value is the inbox filename
+  const fileName   = select.value;
+  const opt        = select.options[select.selectedIndex];
+  const isProcessed = opt?.dataset?.processed === '1';
 
   if (!fileName || !CV_DRIVE_INDEX_URL) return;
+
+  // If already processed, show confirmation and let user decide to reprocess
+  status.style.display = 'block';
+  if (isProcessed) {
+    status.innerHTML = `✅ This CV is already processed. Reprocessing now…`;
+  }
 
   // Lock UI
   btn.disabled = true;
   btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Triggering…';
-  status.style.display = 'block';
-  status.innerHTML = `<span class="pl-pulse"></span> Sending <strong>${fileName}</strong> to GitHub Actions…`;
+  if (!isProcessed) {
+    status.innerHTML = `<span class="pl-pulse"></span> Sending <strong>${fileName}</strong> to GitHub Actions…`;
+  }
 
   await _requestNotifPermission();
 
