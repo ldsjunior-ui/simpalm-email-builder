@@ -1903,7 +1903,7 @@ async function loadCvIndex() {
   // Always read from GitHub — it is the authoritative processed-CV index.
   // Drive URLs are blocked by the Workspace admin; the GitHub index never has Drive URLs.
   try {
-    const res = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
+    const res = await fetch(CV_GH_INDEX_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('empty');
     cvIndex = await res.json();
   } catch {
@@ -2026,8 +2026,9 @@ async function loadInboxFiles() {
   } catch { /* GH unreachable */ }
 
   // 2. GitHub index.json — source of truth for processed CVs
+  // raw.githubusercontent.com ignores query-string cache-busters; must use cache:'no-store'
   try {
-    const r = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
+    const r = await fetch(CV_GH_INDEX_URL, { cache: 'no-store' });
     if (r.ok) processedCVs = await r.json();
   } catch { /* GH unreachable */ }
 
@@ -2161,7 +2162,7 @@ async function processSelectedCV() {
 
 async function _pollForCV(inboxFilename) {
   try {
-    const res = await fetch(CV_GH_INDEX_URL + '?t=' + Date.now());
+    const res = await fetch(CV_GH_INDEX_URL, { cache: 'no-store' });
     if (!res.ok) return;
     const index = await res.json();
 
@@ -2205,7 +2206,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const tBtn   = $('pl-btn-trigger');
   const select = $('pl-cv-select');
 
-  if (rBtn)   rBtn.addEventListener('click',  () => loadInboxFiles());
+  if (rBtn) rBtn.addEventListener('click', async () => {
+    rBtn.disabled = true;
+    rBtn.textContent = '⟳ Checking…';
+    try { await loadInboxFiles(); } catch {}
+    rBtn.textContent = '✓ Updated';
+    setTimeout(() => {
+      rBtn.textContent = '⟳ Refresh';
+      rBtn.disabled = false;
+    }, 1800);
+  });
   if (tBtn)   tBtn.addEventListener('click',  () => processSelectedCV());
   if (select) select.addEventListener('change', () => {
     // Enable/disable trigger based on selection (only if not mid-processing)
