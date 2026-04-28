@@ -500,6 +500,164 @@
     }
     .btn-clear-cv:hover { color: #fff; }
 
+    .btn-preview-cv {
+      flex-shrink: 0;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 4px;
+      color: rgba(255,255,255,.85);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      line-height: 1;
+      padding: 3px 7px;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .btn-preview-cv:hover {
+      background: rgba(255,255,255,.22);
+      color: #fff;
+    }
+
+    /* ── CV Preview Modal ── */
+    .cv-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(20,26,38,.72);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      transition: opacity .2s;
+      pointer-events: none;
+    }
+    .cv-modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .cv-modal-box {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.45);
+      display: flex;
+      flex-direction: column;
+      width: min(860px, 100%);
+      height: min(92vh, 900px);
+      overflow: hidden;
+      transform: translateY(12px) scale(.98);
+      transition: transform .22s ease, opacity .22s;
+      opacity: 0;
+    }
+    .cv-modal-backdrop.open .cv-modal-box {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .cv-modal-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-alt);
+      flex-shrink: 0;
+    }
+    .cv-modal-icon {
+      width: 28px; height: 28px;
+      background: var(--green-lt);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .cv-modal-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cv-modal-subtitle {
+      font-size: 10.5px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+    .cv-modal-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--green-dark);
+      text-decoration: none;
+      border: 1px solid var(--green-mid);
+      border-radius: 5px;
+      padding: 5px 10px;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .cv-modal-dl:hover { background: var(--green-lt); }
+    .cv-modal-close {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+      padding: 5px 9px;
+      transition: color .15s, background .15s;
+    }
+    .cv-modal-close:hover { color: var(--dark); background: var(--bg); }
+
+    .cv-modal-body {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #888;
+    }
+    .cv-modal-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: var(--bg);
+      font-size: 13px;
+      color: var(--muted);
+      z-index: 2;
+      transition: opacity .3s;
+    }
+    .cv-modal-loading.hidden { opacity: 0; pointer-events: none; }
+    .cv-modal-spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .cv-modal-iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
     /* ══════════════════════════════════════
        CV PIPELINE MONITOR
     ══════════════════════════════════════ */
@@ -969,6 +1127,7 @@
               </div>
               <div class="cv-chip" id="f-c1-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c1-cv-chip-name"></span>
+                <button class="btn-preview-cv" id="btn-c1-cv-preview" title="Preview CV">&#128065; Preview</button>
                 <button class="btn-clear-cv" id="btn-c1-cv-clear" title="Clear selection">&#10005;</button>
               </div>
               <select id="f-c1-cv-registry" style="display:none">
@@ -1055,6 +1214,7 @@
               </div>
               <div class="cv-chip" id="f-c2-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c2-cv-chip-name"></span>
+                <button class="btn-preview-cv" id="btn-c2-cv-preview" title="Preview CV">&#128065; Preview</button>
                 <button class="btn-clear-cv" id="btn-c2-cv-clear" title="Clear selection">&#10005;</button>
               </div>
               <select id="f-c2-cv-registry" style="display:none">
@@ -1122,6 +1282,33 @@
     </main>
 
   </div>
+
+  <!-- ── CV Preview Modal ── -->
+  <div class="cv-modal-backdrop" id="cv-modal" role="dialog" aria-modal="true" aria-labelledby="cv-modal-title">
+    <div class="cv-modal-box">
+      <div class="cv-modal-head">
+        <div class="cv-modal-icon">&#128196;</div>
+        <div style="flex:1;min-width:0">
+          <span class="cv-modal-title" id="cv-modal-title">CV Preview</span>
+          <span class="cv-modal-subtitle" id="cv-modal-subtitle"></span>
+        </div>
+        <a class="cv-modal-dl" id="cv-modal-dl" href="#" target="_blank" download title="Download PDF">
+          &#8681; Download
+        </a>
+        <button class="cv-modal-close" id="cv-modal-close" aria-label="Close preview">&#10005;</button>
+      </div>
+      <div class="cv-modal-body">
+        <div class="cv-modal-loading" id="cv-modal-loading">
+          <div class="cv-modal-spinner"></div>
+          <span>Loading PDF&hellip;</span>
+        </div>
+        <iframe class="cv-modal-iframe" id="cv-modal-iframe"
+                title="CV Preview" src="about:blank"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Toast notification -->
@@ -2247,6 +2434,70 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-preview').addEventListener('click', openPreview);
   $('btn-reset').addEventListener('click', resetForm);
   $('btn-logout').addEventListener('click', doLogout);
+
+  // ── CV Preview Modal ──────────────────────────────────────────────────────
+  const cvModal      = $('cv-modal');
+  const cvModalIframe= $('cv-modal-iframe');
+  const cvModalTitle = $('cv-modal-title');
+  const cvModalSub   = $('cv-modal-subtitle');
+  const cvModalDl    = $('cv-modal-dl');
+  const cvModalLoad  = $('cv-modal-loading');
+
+  function openCvModal(candidate) {
+    const entry = getCvEntry(candidate);
+    if (!entry) return;
+
+    const rawUrl    = entry.previewUrl;   // https://raw.githubusercontent.com/.../file.pdf
+    const viewerUrl = 'https://docs.google.com/viewer?embedded=true&url='
+                    + encodeURIComponent(rawUrl);
+
+    // Populate header
+    cvModalTitle.textContent = entry.label || 'CV Preview';
+    cvModalSub.textContent   = '· Simpalm Staffing';
+    cvModalDl.href           = rawUrl;
+    cvModalDl.setAttribute('download', entry.label + '.pdf');
+
+    // Show loading spinner, load viewer
+    cvModalLoad.classList.remove('hidden');
+    cvModalIframe.src = viewerUrl;
+
+    // Hide spinner once iframe signals it has loaded (viewer shell loaded)
+    cvModalIframe.onload = () => {
+      // Google Docs Viewer loads its shell quickly; give 1 s before hiding spinner
+      // so users don't see a blank grey box flash.
+      setTimeout(() => cvModalLoad.classList.add('hidden'), 900);
+    };
+
+    // Open modal with animation
+    cvModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCvModal() {
+    cvModal.classList.remove('open');
+    document.body.style.overflow = '';
+    // Blank the iframe after animation so it stops loading / playing
+    setTimeout(() => {
+      cvModalIframe.src = 'about:blank';
+      cvModalLoad.classList.remove('hidden');
+    }, 220);
+  }
+
+  $('cv-modal-close').addEventListener('click', closeCvModal);
+
+  // Close on backdrop click (not on the modal box itself)
+  cvModal.addEventListener('click', e => {
+    if (e.target === cvModal) closeCvModal();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && cvModal.classList.contains('open')) closeCvModal();
+  });
+
+  // Wire preview buttons for both candidates
+  $('btn-c1-cv-preview').addEventListener('click', () => openCvModal('c1'));
+  $('btn-c2-cv-preview').addEventListener('click', () => openCvModal('c2'));
 
   if (loggedIn()) showApp();
 });
