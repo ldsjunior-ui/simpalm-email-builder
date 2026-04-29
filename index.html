@@ -1993,13 +1993,16 @@ function setupCvBlock(candidate) {
 
     if (!ql.length) { results.style.display = 'none'; results.innerHTML = ''; return; }
 
-    // Split into two ranked groups: name starts-with > name contains / title contains
+    // Split into two ranked groups: name starts-with > name contains / title / source filename
     const alpha  = (a, b) => (a.name || '').localeCompare(b.name || '');
+    // source_file basename (e.g. "1762989808Resume_PDF…") so numeric-prefix searches work
+    const srcOf  = cv => ((cv.source_file || cv.filename || '').split('/').pop()).toLowerCase();
     const starts  = cvIndex.filter(cv => (cv.name  || '').toLowerCase().startsWith(ql)).sort(alpha);
     const contains = cvIndex.filter(cv => {
       const nm = (cv.name  || '').toLowerCase();
       const ti = (cv.title || '').toLowerCase();
-      return !nm.startsWith(ql) && (nm.includes(ql) || ti.includes(ql));
+      const sf = srcOf(cv);
+      return !nm.startsWith(ql) && (nm.includes(ql) || ti.includes(ql) || sf.includes(ql));
     }).sort(alpha);
 
     const all = [...starts, ...contains];
