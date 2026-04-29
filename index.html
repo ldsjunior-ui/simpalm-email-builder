@@ -1912,6 +1912,12 @@ function showApp() {
   updatePreview();
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox
+
+  // Silent warm-up ping — keeps Apps Script hot so the first Trigger call
+  // doesn't hit a 15–30 s cold start. Fire-and-forget; errors silently ignored.
+  if (typeof CV_DRIVE_INDEX_URL !== 'undefined' && CV_DRIVE_INDEX_URL) {
+    fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now()).catch(() => {});
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -2280,11 +2286,11 @@ async function loadInboxFiles() {
 // to GitHub which fires GH Actions for ONLY that one file.
 
 async function processSelectedCV() {
-  const select   = $('pl-cv-select');
-  const btn      = $('pl-btn-trigger');
-  const status   = $('pl-proc-status');
-  const fileName   = select.value;
-  const opt        = select.options[select.selectedIndex];
+  const select      = $('pl-cv-select');
+  const btn         = $('pl-btn-trigger');
+  const status      = $('pl-proc-status');
+  const fileName    = select.value;
+  const opt         = select.options[select.selectedIndex];
   const isProcessed = opt?.dataset?.processed === '1';
 
   if (!fileName || !CV_DRIVE_INDEX_URL) return;
@@ -2304,10 +2310,25 @@ async function processSelectedCV() {
 
   await _requestNotifPermission();
 
+  // Abort after 50 s — Apps Script times out at 6 min but anything past 50 s is a failure
+  const ctrl        = new AbortController();
+  const abortTimer  = setTimeout(() => ctrl.abort(), 50000);
+
+  // After 6 s with no response, explain cold-start delay to the user
+  const warmTimer = setTimeout(() => {
+    if (btn.innerHTML.includes('Triggering')) {
+      status.innerHTML =
+        `<span class="pl-pulse"></span> Warming up Apps Script…<br>` +
+        `<span style="font-size:10px;color:var(--muted)">First call after idle takes 15–30 s. Almost there.</span>`;
+    }
+  }, 6000);
+
   try {
     // Use the existing selective trigger — re-pushes this inbox file → GH Actions fires
-    const url = `${CV_DRIVE_INDEX_URL}?action=trigger&files=${encodeURIComponent('inbox/' + fileName)}&t=${Date.now()}`;
-    const res  = await fetch(url);
+    const url  = `${CV_DRIVE_INDEX_URL}?action=trigger&files=${encodeURIComponent('inbox/' + fileName)}&t=${Date.now()}`;
+    const res  = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(abortTimer);
+    clearTimeout(warmTimer);
     const data = await res.json();
 
     if (!data.ok) {
@@ -2337,7 +2358,12 @@ async function processSelectedCV() {
     _pollTimer = setInterval(() => _pollForCV(_processingFilename), 5000);
 
   } catch (err) {
-    status.innerHTML = `❌ Network error: ${err.message}`;
+    clearTimeout(abortTimer);
+    clearTimeout(warmTimer);
+    const msg = err.name === 'AbortError'
+      ? '⏱ Timed out (50 s) — Apps Script may be overloaded. Try again in a moment.'
+      : `❌ Network error: ${err.message}`;
+    status.innerHTML = msg;
     btn.disabled = false;
     btn.innerHTML = '⚡ Process Selected CV';
     _processingFilename = null;
