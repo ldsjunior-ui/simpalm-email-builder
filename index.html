@@ -1303,8 +1303,7 @@
           <span>Loading PDF&hellip;</span>
         </div>
         <iframe class="cv-modal-iframe" id="cv-modal-iframe"
-                title="CV Preview" src="about:blank"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+                title="CV Preview" src="about:blank"></iframe>
       </div>
     </div>
   </div>
@@ -2443,13 +2442,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const cvModalDl    = $('cv-modal-dl');
   const cvModalLoad  = $('cv-modal-loading');
 
+  // Timeout handle for PDF load
+  let _cvLoadTimer = null;
+
   function openCvModal(candidate) {
     const entry = getCvEntry(candidate);
     if (!entry) return;
 
-    const rawUrl    = entry.previewUrl;   // https://raw.githubusercontent.com/.../file.pdf
-    const viewerUrl = 'https://docs.google.com/viewer?embedded=true&url='
-                    + encodeURIComponent(rawUrl);
+    const rawUrl = entry.previewUrl;   // https://raw.githubusercontent.com/.../file.pdf
 
     // Populate header
     cvModalTitle.textContent = entry.label || 'CV Preview';
@@ -2457,16 +2457,32 @@ document.addEventListener('DOMContentLoaded', () => {
     cvModalDl.href           = rawUrl;
     cvModalDl.setAttribute('download', entry.label + '.pdf');
 
-    // Show loading spinner, load viewer
+    // Reset spinner to default state
     cvModalLoad.classList.remove('hidden');
-    cvModalIframe.src = viewerUrl;
+    cvModalLoad.innerHTML = '<div class="cv-modal-spinner"></div><span>Loading PDF&hellip;</span>';
 
-    // Hide spinner once iframe signals it has loaded (viewer shell loaded)
+    // Load PDF directly — browser renders it natively (no Google Docs Viewer round-trip)
+    cvModalIframe.src = rawUrl;
+
+    // Hide spinner as soon as the browser has the PDF
+    clearTimeout(_cvLoadTimer);
     cvModalIframe.onload = () => {
-      // Google Docs Viewer loads its shell quickly; give 1 s before hiding spinner
-      // so users don't see a blank grey box flash.
-      setTimeout(() => cvModalLoad.classList.add('hidden'), 900);
+      clearTimeout(_cvLoadTimer);
+      cvModalLoad.classList.add('hidden');
     };
+
+    // Safety net: if still spinning after 15 s, show retry
+    _cvLoadTimer = setTimeout(() => {
+      if (!cvModalLoad.classList.contains('hidden')) {
+        cvModalLoad.innerHTML =
+          '<p style="color:#fff;margin:0 0 12px">Taking too long…</p>' +
+          '<button onclick="document.getElementById(\'cv-modal-iframe\').src=\'' +
+          rawUrl.replace(/'/g, "\\'") + '?t=' + Date.now() +
+          '\';this.parentElement.innerHTML=\'<div class=\\\'cv-modal-spinner\\\'></div><span>Loading PDF&hellip;</span>\'" ' +
+          'style="padding:8px 18px;border-radius:6px;border:none;background:#4f8ef7;color:#fff;cursor:pointer;font-size:14px">' +
+          '↺ Retry</button>';
+      }
+    }, 15000);
 
     // Open modal with animation
     cvModal.classList.add('open');
@@ -2474,12 +2490,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeCvModal() {
+    clearTimeout(_cvLoadTimer);
     cvModal.classList.remove('open');
     document.body.style.overflow = '';
     // Blank the iframe after animation so it stops loading / playing
     setTimeout(() => {
       cvModalIframe.src = 'about:blank';
       cvModalLoad.classList.remove('hidden');
+      cvModalLoad.innerHTML = '<div class="cv-modal-spinner"></div><span>Loading PDF&hellip;</span>';
     }, 220);
   }
 
