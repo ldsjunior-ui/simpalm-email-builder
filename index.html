@@ -520,6 +520,79 @@
       color: #fff;
     }
 
+    .btn-autofill-cv {
+      flex-shrink: 0;
+      background: rgba(191,154,82,.18);
+      border: 1px solid rgba(191,154,82,.38);
+      border-radius: 4px;
+      color: #F0D898;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      line-height: 1;
+      padding: 3px 7px;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .btn-autofill-cv:hover {
+      background: rgba(191,154,82,.34);
+      color: #fff;
+    }
+
+    /* ── Single-candidate toggle ── */
+    .c2-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: auto;
+      cursor: pointer;
+    }
+    .c2-toggle-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: var(--border);
+      border-radius: 18px;
+      transition: background .2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--green); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
+
+    /* dim c2 panel when toggled off */
+    .fsec.c2-hidden .fsec-body {
+      display: none;
+    }
+    .fsec.c2-hidden {
+      opacity: 0.52;
+    }
+
     /* ── CV Preview Modal ── */
     .cv-modal-backdrop {
       position: fixed;
@@ -1127,6 +1200,7 @@
               </div>
               <div class="cv-chip" id="f-c1-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c1-cv-chip-name"></span>
+                <button class="btn-autofill-cv" id="btn-c1-autofill" title="Auto-fill fields from this CV">🪄 Auto-fill</button>
                 <button class="btn-preview-cv" id="btn-c1-cv-preview" title="Preview CV">&#128065; Preview</button>
                 <button class="btn-clear-cv" id="btn-c1-cv-clear" title="Clear selection">&#10005;</button>
               </div>
@@ -1166,10 +1240,17 @@
         </div>
 
         <!-- CANDIDATE 2 -->
-        <div class="fsec c2">
+        <div class="fsec c2" id="fsec-c2">
           <div class="fsec-head">
             <span class="fsec-title">Candidate 2</span>
             <span class="badge badge-o">Gold</span>
+            <label class="c2-toggle-wrap" title="Include Candidate 2 in the email">
+              <span class="c2-toggle-label">Include</span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="toggle-c2" checked>
+                <span class="toggle-slider"></span>
+              </span>
+            </label>
           </div>
           <div class="fsec-body">
             <div class="fr">
@@ -1214,6 +1295,7 @@
               </div>
               <div class="cv-chip" id="f-c2-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c2-cv-chip-name"></span>
+                <button class="btn-autofill-cv" id="btn-c2-autofill" title="Auto-fill fields from this CV">🪄 Auto-fill</button>
                 <button class="btn-preview-cv" id="btn-c2-cv-preview" title="Preview CV">&#128065; Preview</button>
                 <button class="btn-clear-cv" id="btn-c2-cv-clear" title="Clear selection">&#10005;</button>
               </div>
@@ -1338,6 +1420,7 @@ const COUNTRIES = [
   { code:'hn', name:'Honduras' },
   { code:'in', name:'India' },
   { code:'id', name:'Indonesia' },
+  { code:'ie', name:'Ireland' },
   { code:'ke', name:'Kenya' },
   { code:'mx', name:'Mexico' },
   { code:'ni', name:'Nicaragua' },
@@ -1414,6 +1497,54 @@ function skillPills(arr) {
   return arr.map(s =>
     `<span style="display:inline-block;background-color:#1E2E40;color:rgba(232,226,216,0.92);font-family:'Inter',-apple-system,sans-serif;font-size:9.5px;font-weight:700;padding:5px 13px;border-radius:100px;letter-spacing:0.1em;text-transform:uppercase;margin:0 7px 7px 0">${esc(s)}</span>`
   ).join('');
+}
+
+/* Returns the Candidate 2 card HTML, or empty string in single-candidate mode */
+function buildC2Block(d) {
+  if (!d.showC2) return '';
+  return `
+      <!-- ── CANDIDATE 2 (gold) ── -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-radius:0 10px 10px 0;border:1px solid #D5D0C8;border-left:4px solid #BF9A52;background-color:#F2EDE4;margin-bottom:30px">
+        <tr><td style="padding:22px 22px 20px">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr>
+              <!-- Avatar -->
+              <td width="80" valign="top" style="width:80px;padding-right:18px;vertical-align:top">
+                <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+                  <td width="80" height="80" align="center" valign="middle"
+                      style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#BF9A52 0%,#8B6914 100%);font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:700;color:#ffffff;text-align:center;vertical-align:middle;line-height:80px">
+                    ${esc(d.c2.initials)}
+                  </td>
+                </tr></table>
+              </td>
+              <!-- Info -->
+              <td valign="middle" style="vertical-align:middle;padding-right:14px">
+                <div style="font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:700;color:#1E2736;margin-bottom:6px">
+                  ${esc(d.c2.name)}
+                </div>
+                <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
+                  <img src="${flag(d.c2.country)}" alt="${esc(d.c2.countryName)}" width="24" height="16"
+                       style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
+                  ${esc(d.c2.countryName)} &nbsp;&middot;&nbsp; ${esc(d.c2.exp)}
+                </div>
+                <span style="display:inline-block;background-color:#F0E0C0;color:#8B6914;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
+                  ${esc(d.c2.rate)}
+                </span>
+              </td>
+              <!-- Button -->
+              <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
+                <a href="${esc(d.c2.url)}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
+                  &#9654;&nbsp;Watch Interview
+                </a>
+                ${d.c2.cvUrl ? '<br><a href="' + esc(d.c2.cvUrl) + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:#BF9A52;color:#ffffff;font-family:\'Inter\',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>' : ''}
+              </td>
+            </tr>
+            ${d.c2.skills.length ? '<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">' + skillPills(d.c2.skills) + '</td></tr>' : ''}
+          </table>
+        </td></tr>
+      </table>`;
 }
 
 function buildEmail(d) {
@@ -1536,48 +1667,7 @@ function buildEmail(d) {
         </td></tr>
       </table>
 
-      <!-- ── CANDIDATE 2 (gold) ── -->
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
-             style="border-radius:0 10px 10px 0;border:1px solid #D5D0C8;border-left:4px solid #BF9A52;background-color:#F2EDE4;margin-bottom:30px">
-        <tr><td style="padding:22px 22px 20px">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-            <tr>
-              <!-- Avatar -->
-              <td width="80" valign="top" style="width:80px;padding-right:18px;vertical-align:top">
-                <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
-                  <td width="80" height="80" align="center" valign="middle"
-                      style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#BF9A52 0%,#8B6914 100%);font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:700;color:#ffffff;text-align:center;vertical-align:middle;line-height:80px">
-                    ${esc(d.c2.initials)}
-                  </td>
-                </tr></table>
-              </td>
-              <!-- Info -->
-              <td valign="middle" style="vertical-align:middle;padding-right:14px">
-                <div style="font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:700;color:#1E2736;margin-bottom:6px">
-                  ${esc(d.c2.name)}
-                </div>
-                <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
-                  <img src="${flag(d.c2.country)}" alt="${esc(d.c2.countryName)}" width="24" height="16"
-                       style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
-                  ${esc(d.c2.countryName)} &nbsp;&middot;&nbsp; ${esc(d.c2.exp)}
-                </div>
-                <span style="display:inline-block;background-color:#F0E0C0;color:#8B6914;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
-                  ${esc(d.c2.rate)}
-                </span>
-              </td>
-              <!-- Button -->
-              <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
-                <a href="${esc(d.c2.url)}" target="_blank" rel="noopener noreferrer"
-                   style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
-                  &#9654;&nbsp;Watch Interview
-                </a>
-                ${d.c2.cvUrl ? `<br><a href="${esc(d.c2.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>` : ''}
-              </td>
-            </tr>
-            ${d.c2.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c2.skills)}</td></tr>` : ''}
-          </table>
-        </td></tr>
-      </table>
+      ${buildC2Block(d)}
 
       <!-- PRICING NOTE -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:22px">
@@ -1604,7 +1694,7 @@ function buildEmail(d) {
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
               <tr>
                 <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">01</td>
-                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Receive the <strong>full detailed resumes</strong> for both candidates</td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Receive the <strong>full detailed resume${d.showC2 ? 's' : ''}</strong> for ${d.showC2 ? 'both candidates' : 'the candidate'}</td>
               </tr>
             </table>
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
@@ -1762,6 +1852,7 @@ function getData() {
     },
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
+    showC2:   !$('toggle-c2') || $('toggle-c2').checked,
   };
 }
 
@@ -1909,6 +2000,16 @@ function showApp() {
 
   setupCvBlock('c1');
   setupCvBlock('c2');
+
+  // Single-candidate toggle
+  const c2Toggle = $('toggle-c2');
+  if (c2Toggle) {
+    c2Toggle.addEventListener('change', () => {
+      $('fsec-c2').classList.toggle('c2-hidden', !c2Toggle.checked);
+      schedulePreview();
+    });
+  }
+
   updatePreview();
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox
@@ -1962,9 +2063,10 @@ function setupCvBlock(candidate) {
   const searchInp = $(`f-${candidate}-cv-search`);
   const regSel    = $(`f-${candidate}-cv-registry`);
   const results   = $(`f-${candidate}-cv-results`);
-  const chip      = $(`f-${candidate}-cv-chip`);
-  const chipName  = $(`f-${candidate}-cv-chip-name`);
-  const clearBtn  = $(`btn-${candidate}-cv-clear`);
+  const chip        = $(`f-${candidate}-cv-chip`);
+  const chipName    = $(`f-${candidate}-cv-chip-name`);
+  const clearBtn    = $(`btn-${candidate}-cv-clear`);
+  const autofillBtn = $(`btn-${candidate}-autofill`);
 
   let activeIdx = -1;   // keyboard-navigation cursor
 
@@ -2092,6 +2194,114 @@ function setupCvBlock(candidate) {
   });
 
   clearBtn.addEventListener('click', clearSelection);
+  if (autofillBtn) autofillBtn.addEventListener('click', () => autoFillFromCv(candidate));
+}
+
+/* ══════════════════════════════════════════════
+   AUTO-FILL FROM CV
+══════════════════════════════════════════════ */
+function locationToCountryCode(location) {
+  if (!location) return '';
+  const loc = location.toLowerCase();
+
+  // 1. Direct country name match against COUNTRIES list
+  const direct = COUNTRIES.find(c => loc.includes(c.name.toLowerCase()));
+  if (direct) return direct.code;
+
+  // 2. City / state → country fallback map
+  const CITY_MAP = {
+    // India
+    'mumbai':'in','delhi':'in','bangalore':'in','bengaluru':'in','hyderabad':'in',
+    'pune':'in','chennai':'in','kolkata':'in','ahmedabad':'in','andheri':'in',
+    'noida':'in','gurgaon':'in','gurugram':'in','navi mumbai':'in','thane':'in',
+    // Nigeria
+    'lagos':'ng','abuja':'ng','port harcourt':'ng','ibadan':'ng','kano':'ng',
+    // Ghana
+    'accra':'gh','kumasi':'gh',
+    // Kenya
+    'nairobi':'ke','mombasa':'ke','kisumu':'ke',
+    // Pakistan
+    'karachi':'pk','lahore':'pk','islamabad':'pk','faisalabad':'pk','rawalpindi':'pk',
+    // Philippines
+    'manila':'ph','cebu':'ph','davao':'ph','quezon':'ph','makati':'ph',
+    // Indonesia
+    'jakarta':'id','bandung':'id','surabaya':'id','medan':'id',
+    // UK
+    'london':'gb','manchester':'gb','birmingham':'gb','leeds':'gb','glasgow':'gb','edinburgh':'gb',
+    // Ireland
+    'dublin':'ie','cork':'ie','galway':'ie','limerick':'ie',
+    // Canada
+    'toronto':'ca','vancouver':'ca','montreal':'ca','calgary':'ca','ottawa':'ca','winnipeg':'ca',
+    // Colombia
+    'bogota':'co','medellin':'co','cali':'co','barranquilla':'co',
+    // Mexico
+    'mexico city':'mx','guadalajara':'mx','monterrey':'mx','puebla':'mx',
+    // Peru
+    'lima':'pe','arequipa':'pe','cusco':'pe',
+    // US cities and states
+    'chicago':'us','new york':'us','houston':'us','dallas':'us','los angeles':'us',
+    'miami':'us','atlanta':'us','seattle':'us','boston':'us','denver':'us',
+    'phoenix':'us','san francisco':'us','austin':'us','charlotte':'us','san diego':'us',
+    'illinois':'us','california':'us','texas':'us','florida':'us','new jersey':'us',
+    'virginia':'us','ohio':'us','washington':'us','michigan':'us','pennsylvania':'us',
+    'north carolina':'us','arizona':'us','georgia':'us','tennessee':'us','colorado':'us',
+    // Australia
+    'sydney':'au','melbourne':'au','brisbane':'au','perth':'au','adelaide':'au',
+    // South Africa
+    'johannesburg':'za','cape town':'za','durban':'za','pretoria':'za',
+    // Eastern Europe
+    'warsaw':'pl','krakow':'pl','bucharest':'ro','cluj':'ro','kyiv':'ua','kiev':'ua','kharkiv':'ua',
+    // Iberia
+    'barcelona':'es','madrid':'es','seville':'es','lisbon':'pt','porto':'pt',
+    // Bangladesh
+    'dhaka':'bd','chittagong':'bd',
+    // Vietnam
+    'hanoi':'vn','ho chi minh':'vn','saigon':'vn',
+  };
+
+  for (const [city, code] of Object.entries(CITY_MAP)) {
+    if (loc.includes(city)) return code;
+  }
+  return '';
+}
+
+function autoFillFromCv(candidate) {
+  const regSel = $(`f-${candidate}-cv-registry`);
+  if (!regSel || !regSel.value) {
+    toast('No CV selected — search and pick a candidate first.', 'err');
+    return;
+  }
+  const cv = cvIndex.find(e => e.filename === regSel.value);
+  if (!cv) {
+    toast('CV entry not found in index.', 'err');
+    return;
+  }
+
+  // 1. Initials — first letter of each name word, uppercase, max 2 chars
+  const words = (cv.name || '').trim().split(/\s+/).filter(Boolean);
+  const inits  = words.slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  if (inits) $(`f-${candidate}i`).value = inits;
+
+  // 2. Full name
+  if (cv.name) $(`f-${candidate}n`).value = cv.name;
+
+  // 3. Country — derived from location string
+  const code = locationToCountryCode(cv.location || '');
+  if (code) {
+    const sel = $(`f-${candidate}c`);
+    if (sel) {
+      sel.value = code;
+      sel.dispatchEvent(new Event('change'));   // updates flag preview
+    }
+  }
+
+  // 4. Years of experience
+  if (typeof cv.years_experience === 'number' && cv.years_experience > 0) {
+    $(`f-${candidate}e`).value = `${cv.years_experience}+ Years`;
+  }
+
+  schedulePreview();
+  toast(`✓ Auto-filled from ${cv.name}'s CV`, 'ok');
 }
 
 async function loadCvIndex() {
