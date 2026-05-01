@@ -1158,15 +1158,9 @@
             <span class="badge badge-g">Green</span>
           </div>
           <div class="fsec-body">
-            <div class="fr">
-              <div class="fg">
-                <label class="fl" for="f-c1i">Initials</label>
-                <input class="fi" type="text" id="f-c1i" placeholder="IB" maxlength="3">
-              </div>
-              <div class="fg">
-                <label class="fl" for="f-c1e">Experience</label>
-                <input class="fi" type="text" id="f-c1e" placeholder="10+ Years">
-              </div>
+            <div class="fg">
+              <label class="fl" for="f-c1e">Experience</label>
+              <input class="fi" type="text" id="f-c1e" placeholder="10+ Years">
             </div>
             <div class="fg">
               <label class="fl" for="f-c1n">Full Name</label>
@@ -1253,15 +1247,9 @@
             </label>
           </div>
           <div class="fsec-body">
-            <div class="fr">
-              <div class="fg">
-                <label class="fl" for="f-c2i">Initials</label>
-                <input class="fi" type="text" id="f-c2i" placeholder="NF" maxlength="3">
-              </div>
-              <div class="fg">
-                <label class="fl" for="f-c2e">Experience</label>
-                <input class="fi" type="text" id="f-c2e" placeholder="8+ Years">
-              </div>
+            <div class="fg">
+              <label class="fl" for="f-c2e">Experience</label>
+              <input class="fi" type="text" id="f-c2e" placeholder="8+ Years">
             </div>
             <div class="fg">
               <label class="fl" for="f-c2n">Full Name</label>
@@ -1510,11 +1498,10 @@ function buildC2Block(d) {
           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
               <!-- Avatar -->
-              <td width="80" valign="top" style="width:80px;padding-right:18px;vertical-align:top">
+              <td width="50" valign="top" style="width:50px;padding-right:16px;vertical-align:top">
                 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
-                  <td width="80" height="80" align="center" valign="middle"
-                      style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#BF9A52 0%,#8B6914 100%);font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:700;color:#ffffff;text-align:center;vertical-align:middle;line-height:80px">
-                    ${esc(d.c2.initials)}
+                  <td width="50" height="50"
+                      style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#BF9A52 0%,#8B6914 100%);font-size:0;line-height:0">&nbsp;
                   </td>
                 </tr></table>
               </td>
@@ -1631,11 +1618,10 @@ function buildEmail(d) {
           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
               <!-- Avatar -->
-              <td width="80" valign="top" style="width:80px;padding-right:18px;vertical-align:top">
+              <td width="50" valign="top" style="width:50px;padding-right:16px;vertical-align:top">
                 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
-                  <td width="80" height="80" align="center" valign="middle"
-                      style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6B9080 0%,#2C3E55 100%);font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:700;color:#ffffff;text-align:center;vertical-align:middle;line-height:80px">
-                    ${esc(d.c1.initials)}
+                  <td width="50" height="50"
+                      style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6B9080 0%,#2C3E55 100%);font-size:0;line-height:0">&nbsp;
                   </td>
                 </tr></table>
               </td>
@@ -1829,7 +1815,6 @@ function getData() {
     intro1:    val('f-p1')   || '[Opening paragraph goes here]',
     intro2:    val('f-p2')   || '[Second paragraph goes here]',
     c1: {
-      initials:    (val('f-c1i') || 'C1').toUpperCase(),
       name:        val('f-c1n')  || 'Candidate One',
       country:     c1code,
       countryName: c1info.name,
@@ -1840,7 +1825,6 @@ function getData() {
       cvUrl:       getCvShareUrl('c1'),
     },
     c2: {
-      initials:    (val('f-c2i') || 'C2').toUpperCase(),
       name:        val('f-c2n')  || 'Candidate Two',
       country:     c2code,
       countryName: c2info.name,
@@ -2277,12 +2261,7 @@ function autoFillFromCv(candidate) {
     return;
   }
 
-  // 1. Initials — first letter of each name word, uppercase, max 2 chars
-  const words = (cv.name || '').trim().split(/\s+/).filter(Boolean);
-  const inits  = words.slice(0, 2).map(w => w[0].toUpperCase()).join('');
-  if (inits) $(`f-${candidate}i`).value = inits;
-
-  // 2. Full name
+  // 1. Full name
   if (cv.name) $(`f-${candidate}n`).value = cv.name;
 
   // 3. Country — derived from location string
