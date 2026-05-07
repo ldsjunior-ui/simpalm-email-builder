@@ -2260,18 +2260,20 @@ function showApp() {
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox
 
-  // ── Auto-poll: check Drive every 30 s for new CVs ───────────────────────
-  // CV uploaded to Drive → appears automatically in "Select CV to process"
-  // within 30 s, no manual Refresh needed.
+  // ── Auto-poll: check Drive every 3 s for new CVs ────────────────────────
+  // CV uploaded to Drive → appears in "Select CV to process" within ~3 s.
+  // Keep-alive ping every 90 s prevents Apps Script cold start (15-30 s delay).
+  let _lastFileList = '';
   setInterval(() => {
-    if (!_processingFilename) {          // don't poll while actively processing
-      loadInboxFiles().catch(() => {});
-    }
-  }, 30000);
+    if (_processingFilename) return;     // don't poll while processing
+    loadInboxFiles().catch(() => {});
+  }, 3000);
 
-  // Silent warm-up ping — keeps Apps Script hot so first call is fast
+  // Keep Apps Script warm — ping every 90 s so it never cold-starts
   if (typeof CV_DRIVE_INDEX_URL !== 'undefined' && CV_DRIVE_INDEX_URL) {
-    fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now()).catch(() => {});
+    const _warmup = () => fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now()).catch(() => {});
+    _warmup();                           // immediate on load
+    setInterval(_warmup, 90000);        // every 90 s thereafter
   }
 }
 
@@ -2670,10 +2672,14 @@ async function loadInboxFiles() {
     const r = await fetch(CV_DRIVE_INDEX_URL + '?action=scan_drive&t=' + Date.now());
     if (r.ok) {
       const data = await r.json();
-      // Apps Script returns [{name, id, created, size}] or {error}
       if (Array.isArray(data)) inboxFiles = data;
     }
   } catch { /* Apps Script unreachable */ }
+
+  // Skip DOM update if nothing changed (prevents flicker on 3 s poll)
+  const _fingerprint = inboxFiles.map(f => f.name + f.id).join('|');
+  if (typeof loadInboxFiles._lastFp !== 'undefined' && loadInboxFiles._lastFp === _fingerprint) return;
+  loadInboxFiles._lastFp = _fingerprint;
 
   // 2. GitHub index.json — source of truth for processed CVs
   try {
@@ -2735,7 +2741,7 @@ async function loadInboxFiles() {
     });
   }
 
-  footer.textContent = `🔄 Live · checked ${_plFmt(_plNow())} · auto-refreshes every 30s`;
+  footer.textContent = `🔄 Live · checked ${_plFmt(_plNow())} · auto-refreshes every 3s`;
 }
 
 // ── Process selected CV ───────────────────────────────────────────────────────
