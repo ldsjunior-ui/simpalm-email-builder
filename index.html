@@ -2260,6 +2260,10 @@ function showApp() {
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox
 
+  // ── Periodic cvIndex refresh (30 s) — picks up newly processed CVs ───────
+  // Prevents cvIndex from staying [] if page loaded before CV was processed.
+  setInterval(() => loadCvIndex(), 30000);
+
   // ── Auto-poll: check Drive every 3 s for new CVs ────────────────────────
   // CV uploaded to Drive → appears in "Select CV to process" within ~3 s.
   // Keep-alive ping every 90 s prevents Apps Script cold start (15-30 s delay).
