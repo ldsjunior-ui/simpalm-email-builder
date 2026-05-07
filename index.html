@@ -213,6 +213,10 @@
       border-radius: 100px; letter-spacing: 0.04em; line-height: 1;
     }
     .c2 .skill-chip { background: var(--gold-lt); color: var(--gold-dark); }
+    .c3 .skill-chip { background: #D4DFE8; color: #2E4B6B; }
+    .c4 .skill-chip { background: #EDDDD8; color: #6B2E1E; }
+    .c5 .skill-chip { background: #D4E8D8; color: #2E5C2E; }
+    .c6 .skill-chip { background: #DDD8E8; color: #3D2E5C; }
     .skill-rm {
       background: none; border: none; cursor: pointer; color: inherit;
       padding: 0; font-size: 13px; line-height: 1; opacity: .6;
@@ -278,9 +282,13 @@
     .badge-g { background: var(--green-lt); color: var(--green-dark); }
     .badge-o { background: var(--gold-lt);  color: var(--gold-dark); }
 
-    /* C1/C2 accent bar on left */
+    /* C1–C6 accent bar on left */
     .fsec.c1 .fsec-head { border-left: 3px solid var(--green); }
     .fsec.c2 .fsec-head { border-left: 3px solid var(--gold); }
+    .fsec.c3 .fsec-head { border-left: 3px solid #5B7FA6; }
+    .fsec.c4 .fsec-head { border-left: 3px solid #A0624A; }
+    .fsec.c5 .fsec-head { border-left: 3px solid #7A9E7E; }
+    .fsec.c6 .fsec-head { border-left: 3px solid #7B6B9E; }
 
     .fsec-body { padding: 14px; display: flex; flex-direction: column; gap: 11px; }
 
@@ -585,11 +593,11 @@
     .toggle-switch input:checked + .toggle-slider { background: var(--green); }
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
 
-    /* dim c2 panel when toggled off */
-    .fsec.c2-hidden .fsec-body {
+    /* dim candidate panel when toggled off */
+    .fsec.candidate-hidden .fsec-body {
       display: none;
     }
-    .fsec.c2-hidden {
+    .fsec.candidate-hidden {
       opacity: 0.52;
     }
 
@@ -1322,6 +1330,222 @@
           </div>
         </div>
 
+        <!-- CANDIDATE 3 -->
+        <div class="fsec c3 candidate-hidden" id="fsec-c3">
+          <div class="fsec-head">
+            <span class="fsec-title">Candidate 3</span>
+            <label class="c2-toggle-wrap" title="Include Candidate 3 in the email">
+              <span class="c2-toggle-label">Include</span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="toggle-c3">
+                <span class="toggle-slider"></span>
+              </span>
+            </label>
+          </div>
+          <div class="fsec-body">
+            <div class="fg"><label class="fl" for="f-c3e">Experience</label><input class="fi" type="text" id="f-c3e" placeholder="8+ Years"></div>
+            <div class="fg"><label class="fl" for="f-c3n">Full Name</label><input class="fi" type="text" id="f-c3n" placeholder="Candidate Name"></div>
+            <div class="fg">
+              <label class="fl">Country</label>
+              <div class="flag-row">
+                <select class="fs" id="f-c3c"></select>
+                <div class="flag-wrap"><img class="flag-img" id="fi3" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
+              </div>
+            </div>
+            <div class="fg"><label class="fl" for="f-c3r">Monthly Rate</label><input class="fi" type="text" id="f-c3r" placeholder="US$ 2,000.00 / month"></div>
+            <div class="fg"><label class="fl" for="f-c3u">Ducknowl Interview URL</label><input class="fi" type="url" id="f-c3u" placeholder="https://app.ducknowl.com/..."></div>
+            <div class="fg cv-block">
+              <label class="fl">CV File</label>
+              <div class="cv-search-wrap">
+                <input class="fi cv-search-inp" type="text" id="f-c3-cv-search" placeholder="Search candidate by name…" autocomplete="off">
+                <div class="cv-results" id="f-c3-cv-results"></div>
+              </div>
+              <div class="cv-chip" id="f-c3-cv-chip" style="display:none">
+                <span class="cv-chip-name" id="f-c3-cv-chip-name"></span>
+                <button class="btn-autofill-cv" id="btn-c3-autofill" title="Auto-fill fields from this CV">🪄 Auto-fill</button>
+                <button class="btn-preview-cv" id="btn-c3-cv-preview" title="Preview CV">&#128065; Preview</button>
+                <button class="btn-clear-cv" id="btn-c3-cv-clear" title="Clear selection">&#10005;</button>
+              </div>
+              <select id="f-c3-cv-registry" style="display:none"><option value="">Loading…</option></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Skills <span class="skill-count" id="c3-skill-count">0 / 5</span></label>
+              <select class="fs" id="f-c3-skill" data-candidate="c3"><option value="">+ Add a skill</option></select>
+              <div class="skill-chips" id="c3-skills"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Custom Skills <span class="skill-count" id="c3-custom-count">0 / 10</span></label>
+              <div class="custom-skill-wrap">
+                <input class="fi" type="text" id="f-c3-custom" placeholder="Type any skill & press Enter">
+                <button class="custom-skill-add" id="btn-c3-add" title="Add skill">+</button>
+              </div>
+              <div class="skill-chips" id="c3-custom-chips"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CANDIDATE 4 -->
+        <div class="fsec c4 candidate-hidden" id="fsec-c4">
+          <div class="fsec-head">
+            <span class="fsec-title">Candidate 4</span>
+            <label class="c2-toggle-wrap" title="Include Candidate 4 in the email">
+              <span class="c2-toggle-label">Include</span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="toggle-c4">
+                <span class="toggle-slider"></span>
+              </span>
+            </label>
+          </div>
+          <div class="fsec-body">
+            <div class="fg"><label class="fl" for="f-c4e">Experience</label><input class="fi" type="text" id="f-c4e" placeholder="8+ Years"></div>
+            <div class="fg"><label class="fl" for="f-c4n">Full Name</label><input class="fi" type="text" id="f-c4n" placeholder="Candidate Name"></div>
+            <div class="fg">
+              <label class="fl">Country</label>
+              <div class="flag-row">
+                <select class="fs" id="f-c4c"></select>
+                <div class="flag-wrap"><img class="flag-img" id="fi4" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
+              </div>
+            </div>
+            <div class="fg"><label class="fl" for="f-c4r">Monthly Rate</label><input class="fi" type="text" id="f-c4r" placeholder="US$ 2,000.00 / month"></div>
+            <div class="fg"><label class="fl" for="f-c4u">Ducknowl Interview URL</label><input class="fi" type="url" id="f-c4u" placeholder="https://app.ducknowl.com/..."></div>
+            <div class="fg cv-block">
+              <label class="fl">CV File</label>
+              <div class="cv-search-wrap">
+                <input class="fi cv-search-inp" type="text" id="f-c4-cv-search" placeholder="Search candidate by name…" autocomplete="off">
+                <div class="cv-results" id="f-c4-cv-results"></div>
+              </div>
+              <div class="cv-chip" id="f-c4-cv-chip" style="display:none">
+                <span class="cv-chip-name" id="f-c4-cv-chip-name"></span>
+                <button class="btn-autofill-cv" id="btn-c4-autofill" title="Auto-fill fields from this CV">🪄 Auto-fill</button>
+                <button class="btn-preview-cv" id="btn-c4-cv-preview" title="Preview CV">&#128065; Preview</button>
+                <button class="btn-clear-cv" id="btn-c4-cv-clear" title="Clear selection">&#10005;</button>
+              </div>
+              <select id="f-c4-cv-registry" style="display:none"><option value="">Loading…</option></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Skills <span class="skill-count" id="c4-skill-count">0 / 5</span></label>
+              <select class="fs" id="f-c4-skill" data-candidate="c4"><option value="">+ Add a skill</option></select>
+              <div class="skill-chips" id="c4-skills"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Custom Skills <span class="skill-count" id="c4-custom-count">0 / 10</span></label>
+              <div class="custom-skill-wrap">
+                <input class="fi" type="text" id="f-c4-custom" placeholder="Type any skill & press Enter">
+                <button class="custom-skill-add" id="btn-c4-add" title="Add skill">+</button>
+              </div>
+              <div class="skill-chips" id="c4-custom-chips"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CANDIDATE 5 -->
+        <div class="fsec c5 candidate-hidden" id="fsec-c5">
+          <div class="fsec-head">
+            <span class="fsec-title">Candidate 5</span>
+            <label class="c2-toggle-wrap" title="Include Candidate 5 in the email">
+              <span class="c2-toggle-label">Include</span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="toggle-c5">
+                <span class="toggle-slider"></span>
+              </span>
+            </label>
+          </div>
+          <div class="fsec-body">
+            <div class="fg"><label class="fl" for="f-c5e">Experience</label><input class="fi" type="text" id="f-c5e" placeholder="8+ Years"></div>
+            <div class="fg"><label class="fl" for="f-c5n">Full Name</label><input class="fi" type="text" id="f-c5n" placeholder="Candidate Name"></div>
+            <div class="fg">
+              <label class="fl">Country</label>
+              <div class="flag-row">
+                <select class="fs" id="f-c5c"></select>
+                <div class="flag-wrap"><img class="flag-img" id="fi5" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
+              </div>
+            </div>
+            <div class="fg"><label class="fl" for="f-c5r">Monthly Rate</label><input class="fi" type="text" id="f-c5r" placeholder="US$ 2,000.00 / month"></div>
+            <div class="fg"><label class="fl" for="f-c5u">Ducknowl Interview URL</label><input class="fi" type="url" id="f-c5u" placeholder="https://app.ducknowl.com/..."></div>
+            <div class="fg cv-block">
+              <label class="fl">CV File</label>
+              <div class="cv-search-wrap">
+                <input class="fi cv-search-inp" type="text" id="f-c5-cv-search" placeholder="Search candidate by name…" autocomplete="off">
+                <div class="cv-results" id="f-c5-cv-results"></div>
+              </div>
+              <div class="cv-chip" id="f-c5-cv-chip" style="display:none">
+                <span class="cv-chip-name" id="f-c5-cv-chip-name"></span>
+                <button class="btn-autofill-cv" id="btn-c5-autofill" title="Auto-fill fields from this CV">🪄 Auto-fill</button>
+                <button class="btn-preview-cv" id="btn-c5-cv-preview" title="Preview CV">&#128065; Preview</button>
+                <button class="btn-clear-cv" id="btn-c5-cv-clear" title="Clear selection">&#10005;</button>
+              </div>
+              <select id="f-c5-cv-registry" style="display:none"><option value="">Loading…</option></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Skills <span class="skill-count" id="c5-skill-count">0 / 5</span></label>
+              <select class="fs" id="f-c5-skill" data-candidate="c5"><option value="">+ Add a skill</option></select>
+              <div class="skill-chips" id="c5-skills"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Custom Skills <span class="skill-count" id="c5-custom-count">0 / 10</span></label>
+              <div class="custom-skill-wrap">
+                <input class="fi" type="text" id="f-c5-custom" placeholder="Type any skill & press Enter">
+                <button class="custom-skill-add" id="btn-c5-add" title="Add skill">+</button>
+              </div>
+              <div class="skill-chips" id="c5-custom-chips"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CANDIDATE 6 -->
+        <div class="fsec c6 candidate-hidden" id="fsec-c6">
+          <div class="fsec-head">
+            <span class="fsec-title">Candidate 6</span>
+            <label class="c2-toggle-wrap" title="Include Candidate 6 in the email">
+              <span class="c2-toggle-label">Include</span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="toggle-c6">
+                <span class="toggle-slider"></span>
+              </span>
+            </label>
+          </div>
+          <div class="fsec-body">
+            <div class="fg"><label class="fl" for="f-c6e">Experience</label><input class="fi" type="text" id="f-c6e" placeholder="8+ Years"></div>
+            <div class="fg"><label class="fl" for="f-c6n">Full Name</label><input class="fi" type="text" id="f-c6n" placeholder="Candidate Name"></div>
+            <div class="fg">
+              <label class="fl">Country</label>
+              <div class="flag-row">
+                <select class="fs" id="f-c6c"></select>
+                <div class="flag-wrap"><img class="flag-img" id="fi6" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
+              </div>
+            </div>
+            <div class="fg"><label class="fl" for="f-c6r">Monthly Rate</label><input class="fi" type="text" id="f-c6r" placeholder="US$ 2,000.00 / month"></div>
+            <div class="fg"><label class="fl" for="f-c6u">Ducknowl Interview URL</label><input class="fi" type="url" id="f-c6u" placeholder="https://app.ducknowl.com/..."></div>
+            <div class="fg cv-block">
+              <label class="fl">CV File</label>
+              <div class="cv-search-wrap">
+                <input class="fi cv-search-inp" type="text" id="f-c6-cv-search" placeholder="Search candidate by name…" autocomplete="off">
+                <div class="cv-results" id="f-c6-cv-results"></div>
+              </div>
+              <div class="cv-chip" id="f-c6-cv-chip" style="display:none">
+                <span class="cv-chip-name" id="f-c6-cv-chip-name"></span>
+                <button class="btn-autofill-cv" id="btn-c6-autofill" title="Auto-fill fields from this CV">🪄 Auto-fill</button>
+                <button class="btn-preview-cv" id="btn-c6-cv-preview" title="Preview CV">&#128065; Preview</button>
+                <button class="btn-clear-cv" id="btn-c6-cv-clear" title="Clear selection">&#10005;</button>
+              </div>
+              <select id="f-c6-cv-registry" style="display:none"><option value="">Loading…</option></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Skills <span class="skill-count" id="c6-skill-count">0 / 5</span></label>
+              <select class="fs" id="f-c6-skill" data-candidate="c6"><option value="">+ Add a skill</option></select>
+              <div class="skill-chips" id="c6-skills"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Custom Skills <span class="skill-count" id="c6-custom-count">0 / 10</span></label>
+              <div class="custom-skill-wrap">
+                <input class="fi" type="text" id="f-c6-custom" placeholder="Type any skill & press Enter">
+                <button class="custom-skill-add" id="btn-c6-add" title="Add skill">+</button>
+              </div>
+              <div class="skill-chips" id="c6-custom-chips"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- FOOTER LINKS -->
         <div class="fsec">
           <div class="fsec-head"><span class="fsec-title">Footer Links</span></div>
@@ -1487,13 +1711,27 @@ function skillPills(arr) {
   ).join('');
 }
 
-/* Returns the Candidate 2 card HTML, or empty string in single-candidate mode */
-function buildC2Block(d) {
-  if (!d.showC2) return '';
+/* Candidate colour palette — c1 kept for reference, c2–c6 used in buildCandidateBlock */
+const CAND_STYLES = {
+  c1: { accent:'#6B9080', rateBg:'#D4E8E2', rateColor:'#2E6B5A', avatar:'linear-gradient(135deg,#6B9080 0%,#2C3E55 100%)' },
+  c2: { accent:'#BF9A52', rateBg:'#F0E0C0', rateColor:'#8B6914', avatar:'linear-gradient(135deg,#BF9A52 0%,#8B6914 100%)' },
+  c3: { accent:'#5B7FA6', rateBg:'#D4DFE8', rateColor:'#2E4B6B', avatar:'linear-gradient(135deg,#5B7FA6 0%,#2E4B6B 100%)' },
+  c4: { accent:'#A0624A', rateBg:'#EDDDD8', rateColor:'#6B2E1E', avatar:'linear-gradient(135deg,#A0624A 0%,#6B2E1E 100%)' },
+  c5: { accent:'#7A9E7E', rateBg:'#D4E8D8', rateColor:'#2E5C2E', avatar:'linear-gradient(135deg,#7A9E7E 0%,#2E5C2E 100%)' },
+  c6: { accent:'#7B6B9E', rateBg:'#DDD8E8', rateColor:'#3D2E5C', avatar:'linear-gradient(135deg,#7B6B9E 0%,#3D2E5C 100%)' },
+};
+
+/* Returns a candidate card HTML block, or '' when the candidate is toggled off */
+function buildCandidateBlock(d, key) {
+  const showKey = 'show' + key[0].toUpperCase() + key.slice(1); // e.g. 'showC2'
+  if (!d[showKey]) return '';
+  const s = CAND_STYLES[key];
+  const c = d[key];
+  const num = key[1]; // '2'–'6'
   return `
-      <!-- ── CANDIDATE 2 (gold) ── -->
+      <!-- ── CANDIDATE ${num} ── -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
-             style="border-radius:0 10px 10px 0;border:1px solid #D5D0C8;border-left:4px solid #BF9A52;background-color:#F2EDE4;margin-bottom:30px">
+             style="border-radius:0 10px 10px 0;border:1px solid #D5D0C8;border-left:4px solid ${s.accent};background-color:#F2EDE4;margin-bottom:30px">
         <tr><td style="padding:22px 22px 20px">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
@@ -1501,40 +1739,41 @@ function buildC2Block(d) {
               <td width="50" valign="top" style="width:50px;padding-right:16px;vertical-align:top">
                 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
                   <td width="50" height="50"
-                      style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#BF9A52 0%,#8B6914 100%);font-size:0;line-height:0">&nbsp;
+                      style="width:50px;height:50px;border-radius:50%;background:${s.avatar};font-size:0;line-height:0">&nbsp;
                   </td>
                 </tr></table>
               </td>
               <!-- Info -->
               <td valign="middle" style="vertical-align:middle;padding-right:14px">
                 <div style="font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:700;color:#1E2736;margin-bottom:6px">
-                  ${esc(d.c2.name)}
+                  ${esc(c.name)}
                 </div>
                 <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
-                  <img src="${flag(d.c2.country)}" alt="${esc(d.c2.countryName)}" width="24" height="16"
+                  <img src="${flag(c.country)}" alt="${esc(c.countryName)}" width="24" height="16"
                        style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
-                  ${esc(d.c2.countryName)} &nbsp;&middot;&nbsp; ${esc(d.c2.exp)}
+                  ${esc(c.countryName)} &nbsp;&middot;&nbsp; ${esc(c.exp)}
                 </div>
-                <span style="display:inline-block;background-color:#F0E0C0;color:#8B6914;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
-                  ${esc(d.c2.rate)}
+                <span style="display:inline-block;background-color:${s.rateBg};color:${s.rateColor};font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
+                  ${esc(c.rate)}
                 </span>
               </td>
               <!-- Button -->
               <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
-                <a href="${esc(d.c2.url)}" target="_blank" rel="noopener noreferrer"
-                   style="display:inline-block;background-color:#BF9A52;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
+                <a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background-color:${s.accent};color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
                   &#9654;&nbsp;Watch Interview
                 </a>
-                ${d.c2.cvUrl ? '<br><a href="' + esc(d.c2.cvUrl) + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:#BF9A52;color:#ffffff;font-family:\'Inter\',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>' : ''}
+                ${c.cvUrl ? `<br><a href="${esc(c.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:${s.accent};color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>` : ''}
               </td>
             </tr>
-            ${d.c2.skills.length ? '<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">' + skillPills(d.c2.skills) + '</td></tr>' : ''}
+            ${c.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(c.skills)}</td></tr>` : ''}
           </table>
         </td></tr>
       </table>`;
 }
 
 function buildEmail(d) {
+  const activeCandCount = 1 + ['c2','c3','c4','c5','c6'].filter(k => d['show'+k[0].toUpperCase()+k.slice(1)]).length;
   return `<!DOCTYPE html>
 <html lang="en" style="font-size:16px;-webkit-font-smoothing:antialiased">
 <head>
@@ -1653,7 +1892,7 @@ function buildEmail(d) {
         </td></tr>
       </table>
 
-      ${buildC2Block(d)}
+      ${['c2','c3','c4','c5','c6'].map(k => buildCandidateBlock(d, k)).join('')}
 
       <!-- PRICING NOTE -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:22px">
@@ -1680,7 +1919,7 @@ function buildEmail(d) {
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
               <tr>
                 <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">01</td>
-                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Receive the <strong>full detailed resume${d.showC2 ? 's' : ''}</strong> for ${d.showC2 ? 'both candidates' : 'the candidate'}</td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Receive the <strong>full detailed resume${activeCandCount > 1 ? 's' : ''}</strong> for ${activeCandCount > 1 ? 'the candidates' : 'the candidate'}</td>
               </tr>
             </table>
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
@@ -1743,8 +1982,8 @@ function buildEmail(d) {
 /* ══════════════════════════════════════════════
    SKILLS STATE
 ══════════════════════════════════════════════ */
-const skills = { c1: [], c2: [] };
-const customSkills = { c1: [], c2: [] };
+const skills = { c1: [], c2: [], c3: [], c4: [], c5: [], c6: [] };
+const customSkills = { c1: [], c2: [], c3: [], c4: [], c5: [], c6: [] };
 
 function addCustomSkill(candidate) {
   const inp = $(`f-${candidate}-custom`);
@@ -1802,41 +2041,41 @@ function renderChips(candidate) {
 /* ══════════════════════════════════════════════
    FORM DATA
 ══════════════════════════════════════════════ */
-function getData() {
-  const c1code = val('f-c1c') || 'br';
-  const c2code = val('f-c2c') || 'br';
-  const c1info = COUNTRIES.find(c => c.code === c1code) || { name: 'Brazil' };
-  const c2info = COUNTRIES.find(c => c.code === c2code) || { name: 'Brazil' };
+function getCandidateData(k, fallback) {
+  const code = val(`f-${k}c`) || 'br';
+  const info = COUNTRIES.find(c => c.code === code) || { name: 'Brazil' };
+  return {
+    name:        val(`f-${k}n`)  || fallback,
+    country:     code,
+    countryName: info.name,
+    exp:         val(`f-${k}e`)  || 'Years Experience',
+    rate:        val(`f-${k}r`)  || 'US$ —',
+    url:         val(`f-${k}u`)  || '#',
+    skills:      [...skills[k], ...customSkills[k]],
+    cvUrl:       getCvShareUrl(k),
+  };
+}
 
+function getData() {
   return {
     recipient: val('f-rec')  || 'there',
     company:   val('f-co')   || '[Client Company]',
     month:     val('f-mo')   || '[Month Year]',
     intro1:    val('f-p1')   || '[Opening paragraph goes here]',
     intro2:    val('f-p2')   || '[Second paragraph goes here]',
-    c1: {
-      name:        val('f-c1n')  || 'Candidate One',
-      country:     c1code,
-      countryName: c1info.name,
-      exp:         val('f-c1e')  || 'Years Experience',
-      rate:        val('f-c1r')  || 'US$ —',
-      url:         val('f-c1u')  || '#',
-      skills:      [...skills.c1, ...customSkills.c1],
-      cvUrl:       getCvShareUrl('c1'),
-    },
-    c2: {
-      name:        val('f-c2n')  || 'Candidate Two',
-      country:     c2code,
-      countryName: c2info.name,
-      exp:         val('f-c2e')  || 'Years Experience',
-      rate:        val('f-c2r')  || 'US$ —',
-      url:         val('f-c2u')  || '#',
-      skills:      [...skills.c2, ...customSkills.c2],
-      cvUrl:       getCvShareUrl('c2'),
-    },
+    c1: getCandidateData('c1', 'Candidate One'),
+    c2: getCandidateData('c2', 'Candidate Two'),
+    c3: getCandidateData('c3', 'Candidate Three'),
+    c4: getCandidateData('c4', 'Candidate Four'),
+    c5: getCandidateData('c5', 'Candidate Five'),
+    c6: getCandidateData('c6', 'Candidate Six'),
     siteUrl:  val('f-site')  || 'https://simpalm.com',
     unsubUrl: val('f-unsub') || 'https://simpalm.com/unsubscribe',
-    showC2:   !$('toggle-c2') || $('toggle-c2').checked,
+    showC2: !$('toggle-c2') || $('toggle-c2').checked,
+    showC3: !!($('toggle-c3') && $('toggle-c3').checked),
+    showC4: !!($('toggle-c4') && $('toggle-c4').checked),
+    showC5: !!($('toggle-c5') && $('toggle-c5').checked),
+    showC6: !!($('toggle-c6') && $('toggle-c6').checked),
   };
 }
 
@@ -1912,16 +2151,25 @@ function copyHTML() {
 ══════════════════════════════════════════════ */
 function resetForm() {
   document.querySelectorAll('.fi, .fta').forEach(el => el.value = '');
-  $('f-c1c').value = 'br';
-  $('f-c2c').value = 'br';
-  $('fi1').src = flag('br');
-  $('fi2').src = flag('br');
-  skills.c1 = []; skills.c2 = [];
-  customSkills.c1 = []; customSkills.c2 = [];
-  renderChips('c1'); renderChips('c2');
-  renderCustomChips('c1'); renderCustomChips('c2');
-  $('f-c1-skill').value = ''; $('f-c2-skill').value = '';
-  $('f-c1-custom').value = ''; $('f-c2-custom').value = '';
+  ['c1','c2','c3','c4','c5','c6'].forEach((k, i) => {
+    const countryEl = $(`f-${k}c`);
+    if (countryEl) countryEl.value = 'br';
+    const flagEl = $(`fi${i + 1}`);
+    if (flagEl) flagEl.src = flag('br');
+    skills[k] = []; customSkills[k] = [];
+    renderChips(k); renderCustomChips(k);
+    const skillSel = $(`f-${k}-skill`);
+    if (skillSel) skillSel.value = '';
+    const customInp = $(`f-${k}-custom`);
+    if (customInp) customInp.value = '';
+  });
+  // Collapse c3–c6 panels and uncheck their toggles
+  ['c3','c4','c5','c6'].forEach(k => {
+    const tog = $(`toggle-${k}`);
+    if (tog) tog.checked = false;
+    const panel = $(`fsec-${k}`);
+    if (panel) panel.classList.add('candidate-hidden');
+  });
   updatePreview();
   toast('Form cleared.', 'ok');
 }
@@ -1947,17 +2195,27 @@ function showApp() {
   $('login-screen').style.display = 'none';
   $('app').style.display = 'flex';
 
-  populateSelect('f-c1c', 'br');
-  populateSelect('f-c2c', 'br');
-
-  // Flag previews update on country change
-  $('f-c1c').addEventListener('change', function () {
-    $('fi1').src = flag(this.value);
-    schedulePreview();
+  ['c1','c2','c3','c4','c5','c6'].forEach((k, i) => {
+    const countryId = `f-${k}c`;
+    if ($(countryId)) {
+      populateSelect(countryId, 'br');
+      $(countryId).addEventListener('change', function () {
+        const fi = $(`fi${i + 1}`);
+        if (fi) fi.src = flag(this.value);
+        schedulePreview();
+      });
+    }
   });
-  $('f-c2c').addEventListener('change', function () {
-    $('fi2').src = flag(this.value);
-    schedulePreview();
+
+  // Clone skill optgroups from c1 into c3–c6 selects (avoids duplicating huge HTML blocks)
+  const c1SkillSel = $('f-c1-skill');
+  ['c3','c4','c5','c6'].forEach(k => {
+    const sel = $(`f-${k}-skill`);
+    if (!sel || !c1SkillSel) return;
+    const placeholder = sel.querySelector('option'); // keep the "+ Add a skill" option
+    sel.innerHTML = '';
+    if (placeholder) sel.appendChild(placeholder.cloneNode(true));
+    c1SkillSel.querySelectorAll('optgroup').forEach(og => sel.appendChild(og.cloneNode(true)));
   });
 
   // All form inputs trigger preview
@@ -1966,8 +2224,10 @@ function showApp() {
   });
 
   // Skill selects
-  $('f-c1-skill').addEventListener('change', function() { addSkill('c1', this); });
-  $('f-c2-skill').addEventListener('change', function() { addSkill('c2', this); });
+  ['c1','c2','c3','c4','c5','c6'].forEach(k => {
+    const sel = $(`f-${k}-skill`);
+    if (sel) sel.addEventListener('change', function() { addSkill(k, this); });
+  });
 
   // Skill chip remove — event delegation (predefined + custom)
   document.addEventListener('click', e => {
@@ -1977,22 +2237,24 @@ function showApp() {
   });
 
   // Custom skill inputs — Enter key or + button
-  ['c1','c2'].forEach(c => {
-    $(`f-${c}-custom`).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSkill(c); } });
-    $(`btn-${c}-add`).addEventListener('click', () => addCustomSkill(c));
+  ['c1','c2','c3','c4','c5','c6'].forEach(c => {
+    const inp = $(`f-${c}-custom`);
+    const btn = $(`btn-${c}-add`);
+    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSkill(c); } });
+    if (btn) btn.addEventListener('click', () => addCustomSkill(c));
   });
 
-  setupCvBlock('c1');
-  setupCvBlock('c2');
+  ['c1','c2','c3','c4','c5','c6'].forEach(k => setupCvBlock(k));
 
-  // Single-candidate toggle
-  const c2Toggle = $('toggle-c2');
-  if (c2Toggle) {
-    c2Toggle.addEventListener('change', () => {
-      $('fsec-c2').classList.toggle('c2-hidden', !c2Toggle.checked);
+  // Candidate toggles (c2 starts checked/visible; c3–c6 start unchecked/hidden)
+  ['c2','c3','c4','c5','c6'].forEach(k => {
+    const toggle = $(`toggle-${k}`);
+    if (!toggle) return;
+    toggle.addEventListener('change', () => {
+      $(`fsec-${k}`).classList.toggle('candidate-hidden', !toggle.checked);
       schedulePreview();
     });
-  }
+  });
 
   updatePreview();
   loadCvIndex();
@@ -2294,7 +2556,7 @@ async function loadCvIndex() {
     cvIndex = [];
   }
   // Populate hidden <select> for value-tracking; visible search box reads cvIndex directly
-  ['c1','c2'].forEach(c => {
+  ['c1','c2','c3','c4','c5','c6'].forEach(c => {
     const sel = $(`f-${c}-cv-registry`);
     if (!sel) return;
     sel.innerHTML = '<option value=""></option>';
@@ -2381,11 +2643,11 @@ function toastReady(msg) {
   }, 12_000);
 }
 
-// ── Load GitHub inbox → populate dropdown ────────────────────────────────────
-// Uses the GitHub Contents API (public repo, no auth) to list files in inbox/.
-// Compares with index.json to mark which are ✅ processed vs ⏳ pending.
-// Trigger uses the existing ?action=trigger&files=inbox/filename endpoint —
-// no Apps Script redeployment needed.
+// ── Load Drive inbox → populate dropdown ─────────────────────────────────────
+// Reads files directly from Google Drive via Apps Script ?action=scan_drive.
+// This shows CVs the moment they are uploaded to Drive — no GitHub push needed.
+// Compares with GitHub index.json to mark ✅ processed vs ⏳ pending.
+// Processing only starts when user clicks "Process Selected CV".
 
 async function loadInboxFiles() {
   const select = $('pl-cv-select');
@@ -2395,28 +2657,23 @@ async function loadInboxFiles() {
   let inboxFiles   = [];
   let processedCVs = [];
 
-  // 1. GitHub Contents API — lists raw files in inbox/ (public repo, no token)
+  // 1. Google Drive — list files via Apps Script (instant, no GitHub push)
   try {
-    const r = await fetch(CV_GH_INBOX_API + '?ref=main&t=' + Date.now(), {
-      headers: { Accept: 'application/vnd.github.v3+json' },
-    });
+    const r = await fetch(CV_DRIVE_INDEX_URL + '?action=scan_drive&t=' + Date.now());
     if (r.ok) {
-      const all = await r.json();
-      // Keep only PDF/DOCX, exclude .trigger, .gitkeep and other meta files
-      inboxFiles = Array.isArray(all)
-        ? all.filter(f => f.type === 'file' && /\.(pdf|docx?)$/i.test(f.name))
-        : [];
+      const data = await r.json();
+      // Apps Script returns [{name, id, created, size}] or {error}
+      if (Array.isArray(data)) inboxFiles = data;
     }
-  } catch { /* GH unreachable */ }
+  } catch { /* Apps Script unreachable */ }
 
   // 2. GitHub index.json — source of truth for processed CVs
-  // raw.githubusercontent.com ignores query-string cache-busters; must use cache:'no-store'
   try {
     const r = await fetch(CV_GH_INDEX_URL, { cache: 'no-store' });
     if (r.ok) processedCVs = await r.json();
   } catch { /* GH unreachable */ }
 
-  // Build lookup: processed source filenames
+  // Build lookup: processed source filenames (matched by Drive filename)
   const processedSet = new Set(
     processedCVs.map(p => (p.source_file || '').split('/').pop())
   );
@@ -2426,7 +2683,7 @@ async function loadInboxFiles() {
   select.innerHTML = '';
 
   if (inboxFiles.length === 0) {
-    select.innerHTML = '<option value="">No CVs in GitHub inbox yet</option>';
+    select.innerHTML = '<option value="">No CVs in Drive folder yet</option>';
   } else {
     const placeholder = document.createElement('option');
     placeholder.value = '';
@@ -2436,8 +2693,9 @@ async function loadInboxFiles() {
     inboxFiles.forEach(f => {
       const isProcessed = processedSet.has(f.name);
       const opt = document.createElement('option');
-      opt.value = f.name;               // filename used as value
-      opt.dataset.name = f.name;
+      opt.value = f.name;
+      opt.dataset.name    = f.name;
+      opt.dataset.fileId  = f.id;      // Drive file ID — used by push_and_trigger
       opt.dataset.processed = isProcessed ? '1' : '0';
       opt.textContent = (isProcessed ? '✅ ' : '⏳ ') + f.name;
       select.appendChild(opt);
@@ -2451,10 +2709,10 @@ async function loadInboxFiles() {
     btn.disabled = !select.value;
   }
 
-  // ── Sync c1/c2 candidate dropdowns ───────────────────────────
+  // ── Sync c1–c6 candidate dropdowns ───────────────────────────
   if (processedCVs.length) {
     cvIndex = processedCVs;
-    ['c1', 'c2'].forEach(c => {
+    ['c1','c2','c3','c4','c5','c6'].forEach(c => {
       const sel = $(`f-${c}-cv-registry`);
       if (!sel) return;
       const prev = sel.value;
@@ -2516,8 +2774,11 @@ async function processSelectedCV() {
   }, 6000);
 
   try {
-    // Use the existing selective trigger — re-pushes this inbox file → GH Actions fires
-    const url  = `${CV_DRIVE_INDEX_URL}?action=trigger&files=${encodeURIComponent('inbox/' + fileName)}&t=${Date.now()}`;
+    // Push from Drive to GitHub inbox → GH Actions fires for this file only
+    const fileId = opt?.dataset?.fileId || '';
+    const url  = fileId
+      ? `${CV_DRIVE_INDEX_URL}?action=push_and_trigger&file_id=${encodeURIComponent(fileId)}&t=${Date.now()}`
+      : `${CV_DRIVE_INDEX_URL}?action=trigger&files=${encodeURIComponent('inbox/' + fileName)}&t=${Date.now()}`;
     const res  = await fetch(url, { signal: ctrl.signal });
     clearTimeout(abortTimer);
     clearTimeout(warmTimer);
@@ -2612,6 +2873,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (rBtn) rBtn.addEventListener('click', async () => {
     rBtn.disabled = true;
+    rBtn.textContent = '⟳ Scanning Drive…';
+    // 1. Tell GAS to push any new Drive files to GitHub inbox (fire-and-forget — 25 s cap)
+    try {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 25000);
+      await fetch(CV_DRIVE_INDEX_URL + '?action=scan_drive', { signal: ctrl.signal }).catch(() => {});
+    } catch {}
+    // 2. Refresh the GitHub-side dropdown + processed list
     rBtn.textContent = '⟳ Checking…';
     try { await loadInboxFiles(); } catch {}
     rBtn.textContent = '✓ Updated';
