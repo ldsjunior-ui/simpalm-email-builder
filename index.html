@@ -2260,8 +2260,16 @@ function showApp() {
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox
 
-  // Silent warm-up ping — keeps Apps Script hot so the first Trigger call
-  // doesn't hit a 15–30 s cold start. Fire-and-forget; errors silently ignored.
+  // ── Auto-poll: check Drive every 30 s for new CVs ───────────────────────
+  // CV uploaded to Drive → appears automatically in "Select CV to process"
+  // within 30 s, no manual Refresh needed.
+  setInterval(() => {
+    if (!_processingFilename) {          // don't poll while actively processing
+      loadInboxFiles().catch(() => {});
+    }
+  }, 30000);
+
+  // Silent warm-up ping — keeps Apps Script hot so first call is fast
   if (typeof CV_DRIVE_INDEX_URL !== 'undefined' && CV_DRIVE_INDEX_URL) {
     fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now()).catch(() => {});
   }
@@ -2727,7 +2735,7 @@ async function loadInboxFiles() {
     });
   }
 
-  footer.textContent = `Last checked: ${_plFmt(_plNow())}`;
+  footer.textContent = `🔄 Live · checked ${_plFmt(_plNow())} · auto-refreshes every 30s`;
 }
 
 // ── Process selected CV ───────────────────────────────────────────────────────
