@@ -2555,6 +2555,43 @@ function autoFillFromCv(candidate) {
     $(`f-${candidate}e`).value = `${cv.years_experience}+ Years`;
   }
 
+  // 5. Skills — auto-select up to 5 from the standard dropdown, rest as custom
+  if (Array.isArray(cv.skills) && cv.skills.length > 0) {
+    const skillSel = $(`f-${candidate}-skill`);
+    const customInp = $(`f-${candidate}-custom-skill-inp`);
+    const addBtn    = $(`f-${candidate}-custom-skill-add`);
+    // Get the list of options in the standard skills dropdown
+    const stdOptions = skillSel
+      ? [...skillSel.options].map(o => o.value.toLowerCase())
+      : [];
+
+    let stdAdded = 0;
+    const customSkills = [];
+    for (const skill of cv.skills) {
+      const skillLc = skill.toLowerCase();
+      // Try to find exact or close match in standard dropdown (up to 5)
+      const match = stdOptions.find(o => o === skillLc || o.includes(skillLc) || skillLc.includes(o));
+      if (match && stdAdded < 5 && skillSel) {
+        // Use the original case from dropdown option
+        const opt = [...skillSel.options].find(o => o.value.toLowerCase() === match);
+        if (opt) {
+          skillSel.value = opt.value;
+          skillSel.dispatchEvent(new Event('change', { bubbles: true }));
+          stdAdded++;
+        }
+      } else {
+        customSkills.push(skill);
+      }
+    }
+    // Add remaining as custom skills (up to 10 total)
+    for (const cs of customSkills.slice(0, 10)) {
+      if (customInp && addBtn) {
+        customInp.value = cs;
+        addBtn.click();
+      }
+    }
+  }
+
   schedulePreview();
   toast(`✓ Auto-filled from ${cv.name}'s CV`, 'ok');
 }
