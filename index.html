@@ -1153,12 +1153,18 @@
               <input class="fi" type="text" id="f-mo" placeholder="e.g. April 2026">
             </div>
             <div class="fg">
-              <label class="fl" for="f-p1">Opening Paragraph</label>
-              <textarea class="fta" id="f-p1" rows="4" placeholder="Custom intro — what makes this search unique..."></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+                <label class="fl" for="f-p1" style="margin-bottom:0">Opening Paragraph</label>
+                <button type="button" onclick="loadEmailTemplate()" title="Fill both paragraphs with the standard template"
+                  style="font-size:10px;font-family:'Inter',sans-serif;font-weight:600;padding:3px 10px;border-radius:100px;border:1px solid #6B9080;background:#EBF4F1;color:#2E6B5A;cursor:pointer;white-space:nowrap;letter-spacing:0.04em">
+                  📋 Load Template
+                </button>
+              </div>
+              <textarea class="fta" id="f-p1" rows="5" placeholder="Hi [Client First Name], I hope this email finds you well..."></textarea>
             </div>
             <div class="fg">
               <label class="fl" for="f-p2">Second Paragraph (interview pitch)</label>
-              <textarea class="fta" id="f-p2" rows="3" placeholder="Please review the recorded interviews below..."></textarea>
+              <textarea class="fta" id="f-p2" rows="4" placeholder="Important note on the videos..."></textarea>
             </div>
           </div>
         </div>
@@ -1691,6 +1697,22 @@ function toast(msg, type = 'ok') {
   el.className = `toast ${type} on`;
   clearTimeout(_tt);
   _tt = setTimeout(() => el.classList.remove('on'), 3000);
+}
+
+/* ══════════════════════════════════════════════
+   EMAIL TEMPLATE LOADER
+══════════════════════════════════════════════ */
+function loadEmailTemplate() {
+  const p1 = document.getElementById('f-p1');
+  const p2 = document.getElementById('f-p2');
+
+  p1.value = `Hi [Client First Name],\n\nI hope this email finds you well.\n\nAttached is the Candidate Briefing with our top two pre-screened and interviewed professionals for your [Role – e.g., Corporate Lawyer / Senior Accountant / IT Support Specialist / Bookkeeper / Executive Assistant] position.\n\nBoth candidates are available immediately (or as per your timeline), fully bilingual (English/Portuguese), and have strong experience working with international standards and remote/hybrid environments.`;
+
+  p2.value = `Important note on the videos:\n\nBelow you will find the actual interview recordings. These are 100% spontaneous and unscripted — the candidates did not have time to prepare written answers or rehearse. What you'll see is their real-time thinking, communication style, and authentic personality. This gives you a much more realistic view of how they perform under normal conditions.`;
+
+  p1.dispatchEvent(new Event('input', { bubbles: true }));
+  p2.dispatchEvent(new Event('input', { bubbles: true }));
+  toast('Template loaded — customize [Client First Name] and [Role]', 'ok');
 }
 
 /* ══════════════════════════════════════════════
