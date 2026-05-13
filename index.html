@@ -1147,10 +1147,7 @@
               <label class="fl" for="f-rec">Recipient Name</label>
               <input class="fi" type="text" id="f-rec" placeholder="e.g. Alisha">
             </div>
-            <div class="fg">
-              <label class="fl" for="f-co">Client Company</label>
-              <input class="fi" type="text" id="f-co" placeholder="e.g. Sweet Magnolia Social">
-            </div>
+
             <div class="fg">
               <label class="fl" for="f-mo">Briefing Month / Year</label>
               <input class="fi" type="text" id="f-mo" placeholder="e.g. April 2026">
@@ -1813,7 +1810,7 @@ function buildEmail(d) {
         Simpalm<span style="color:#6B9080">&middot;</span>Staffing
       </div>
       <div style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:12px;color:#6E7490;letter-spacing:0.03em">
-        Candidate Briefing &mdash; ${esc(d.company)}
+        Candidate Briefing
       </div>
     </td>
   </tr>
@@ -1942,34 +1939,15 @@ function buildEmail(d) {
   <!-- FOOTER -->
   <tr>
     <td class="pad-sides" align="center" style="background-color:#F2EDE4;border-top:1px solid #EDE8DF;padding:18px 56px 24px;text-align:center">
-      <div style="font-family:'Playfair Display',Georgia,serif;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#6E7490;margin-bottom:10px">
-        Simpalm&middot;Staffing
-      </div>
-      <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin:0 auto 10px">
-        <tr>
-          <td width="4" height="4" bgcolor="#9FBFB4" style="width:4px;height:4px;border-radius:50%;background-color:#9FBFB4;font-size:0;line-height:0">&nbsp;</td>
-          <td width="8" style="font-size:0">&nbsp;</td>
-          <td width="4" height="4" bgcolor="#9FBFB4" style="width:4px;height:4px;border-radius:50%;background-color:#9FBFB4;font-size:0;line-height:0">&nbsp;</td>
-          <td width="8" style="font-size:0">&nbsp;</td>
-          <td width="4" height="4" bgcolor="#9FBFB4" style="width:4px;height:4px;border-radius:50%;background-color:#9FBFB4;font-size:0;line-height:0">&nbsp;</td>
-        </tr>
-      </table>
       <!-- LATAM STAFFING SOLUTIONS TAGLINE -->
-      <div style="margin-bottom:14px">
-        <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:#000000;letter-spacing:0.02em;line-height:1.3;margin-bottom:6px">
+      <div style="margin-bottom:10px">
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:#000000;letter-spacing:0.02em;line-height:1.3;margin-bottom:10px">
           LATAM Staffing Solutions
         </div>
-        <div style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:16px;color:#000000;letter-spacing:0.03em">
+        <div style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:22px;font-weight:700;color:#000000;letter-spacing:0.03em;line-height:1.4">
           Delegate the Grind. It&rsquo;s Time to Shine.
         </div>
       </div>
-
-      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;color:#6E7490;line-height:1.8;margin:0">
-        You&rsquo;re receiving this as part of your candidate search with Simpalm&nbsp;Staffing.<br>
-        <a href="${esc(d.unsubUrl)}" style="color:#6B9080;text-decoration:none;font-weight:600">Unsubscribe</a>
-        &nbsp;&middot;&nbsp;
-        <a href="${esc(d.siteUrl)}" style="color:#6B9080;text-decoration:none;font-weight:600">simpalm.com</a>
-      </p>
     </td>
   </tr>
 
@@ -2061,7 +2039,7 @@ function getCandidateData(k, fallback) {
 function getData() {
   return {
     recipient: val('f-rec')  || 'there',
-    company:   val('f-co')   || '[Client Company]',
+
     month:     val('f-mo')   || '[Month Year]',
     intro1:    `I hope this email finds you well.\n\nAttached is the candidate package, including the carefully shortlisted professionals, for your review. Our team has already invested significant time sourcing, screening, interviewing, and vetting each candidate to help streamline your hiring process and save your team valuable time. The package includes candidate resumes and recordings of one-way interviews.`,
     intro2:    `We strongly encourage reviewing the “Watch Interview” section, as it gives valuable insight into each candidate’s communication style, professionalism, and real-time thinking. Candidates respond spontaneously through our screening platform without seeing the questions in advance, helping create a more authentic and unbiased evaluation process.`,
