@@ -1181,7 +1181,7 @@
             </div>
             <div class="fg">
               <label class="fl" for="f-c1r">Monthly Rate</label>
-              <input class="fi" type="text" id="f-c1r" placeholder="US$ 2,500.00 / month">
+              <input class="fi" type="text" id="f-c1r" placeholder="e.g. 2500">
             </div>
             <div class="fg">
               <label class="fl" for="f-c1u">Ducknowl Interview URL</label>
@@ -1270,7 +1270,7 @@
             </div>
             <div class="fg">
               <label class="fl" for="f-c2r">Monthly Rate</label>
-              <input class="fi" type="text" id="f-c2r" placeholder="US$ 1,984.00 / month">
+              <input class="fi" type="text" id="f-c2r" placeholder="e.g. 2500">
             </div>
             <div class="fg">
               <label class="fl" for="f-c2u">Ducknowl Interview URL</label>
@@ -1348,7 +1348,7 @@
                 <div class="flag-wrap"><img class="flag-img" id="fi3" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
               </div>
             </div>
-            <div class="fg"><label class="fl" for="f-c3r">Monthly Rate</label><input class="fi" type="text" id="f-c3r" placeholder="US$ 2,000.00 / month"></div>
+            <div class="fg"><label class="fl" for="f-c3r">Monthly Rate</label><input class="fi" type="text" id="f-c3r" placeholder="e.g. 2500"></div>
             <div class="fg"><label class="fl" for="f-c3u">Ducknowl Interview URL</label><input class="fi" type="url" id="f-c3u" placeholder="https://app.ducknowl.com/..."></div>
             <div class="fg cv-block">
               <label class="fl">CV File</label>
@@ -2016,6 +2016,21 @@ function renderChips(candidate) {
 }
 
 /* ══════════════════════════════════════════════
+   RATE FORMATTER  (type "2500" → "US$ 2.500,00/month")
+══════════════════════════════════════════════ */
+function formatRate(raw) {
+  if (!raw || !raw.trim()) return 'US$ —';
+  const trimmed = raw.trim();
+  // Already formatted (contains letters or $) → return as-is
+  if (/[a-zA-Z$]/.test(trimmed)) return trimmed;
+  const num = parseFloat(trimmed.replace(/\./g, '').replace(',', '.'));
+  if (isNaN(num)) return trimmed;
+  const parts = num.toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `US$ ${parts[0]},${parts[1]}/month`;
+}
+
+/* ══════════════════════════════════════════════
    FORM DATA
 ══════════════════════════════════════════════ */
 function getCandidateData(k, fallback) {
@@ -2026,7 +2041,7 @@ function getCandidateData(k, fallback) {
     country:     code,
     countryName: info.name,
     exp:         val(`f-${k}e`)  || 'Years Experience',
-    rate:        val(`f-${k}r`)  || 'US$ —',
+    rate:        formatRate(val(`f-${k}r`)),
     url:         val(`f-${k}u`)  || '#',
     skills:      [...skills[k], ...customSkills[k]],
     cvUrl:       getCvShareUrl(k),
