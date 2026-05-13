@@ -228,6 +228,9 @@
     .fg:has([id$="-skill"]),
     .fg:has([id$="-custom"]) { display: none !important; }
 
+    /* Always show only 2 candidates — hide 3-6 sidebar panels */
+    #fsec-c3, #fsec-c4, #fsec-c5, #fsec-c6 { display: none !important; }
+
     /* Body */
     .app-body {
       display: flex;
