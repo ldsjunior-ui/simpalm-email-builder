@@ -1838,12 +1838,23 @@ function buildEmail(d) {
         Hi ${esc(d.recipient)},
       </p>
 
-      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;color:#3D4358;line-height:1.85;margin:0 0 14px 0">
+      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;color:#3D4358;line-height:1.85;margin:0 0 18px 0">
         ${esc(d.intro1)}
       </p>
-      <p style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;color:#3D4358;line-height:1.85;margin:0 0 30px 0">
-        ${esc(d.intro2)}
-      </p>
+
+      <!-- IMPORTANT NOTE BOX -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:30px">
+        <tr>
+          <td style="background-color:#F0F4F8;border-left:3px solid #6B9080;border-radius:0 6px 6px 0;padding:12px 16px">
+            <div style="font-family:'Inter',-apple-system,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#6B9080;margin-bottom:5px">
+              📹 Note on the videos
+            </div>
+            <p style="font-family:'Inter',-apple-system,sans-serif;font-size:12px;color:#4A5568;line-height:1.7;margin:0">
+              ${esc(d.intro2)}
+            </p>
+          </td>
+        </tr>
+      </table>
 
       <!-- ── CANDIDATE 1 (green) ── -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
@@ -2054,8 +2065,8 @@ function getData() {
     recipient: val('f-rec')  || 'there',
     company:   val('f-co')   || '[Client Company]',
     month:     val('f-mo')   || '[Month Year]',
-    intro1:    `Hi ${val('f-rec') || '[Client First Name]'},\n\nI hope this email finds you well.\n\nAttached is the Candidate Briefing with our top two pre-screened and interviewed professionals for your consideration.\n\nBoth candidates are fully bilingual and have strong experience working with international standards and remote/hybrid environments.`,
-    intro2:    `Important note on the videos:\n\nBelow you will find the actual interview recordings. These are 100% spontaneous and unscripted. The candidates did not have time to prepare written answers or rehearse. What you'll see is their real-time thinking, communication style, and authentic personality. This gives you a much more realistic view of how they perform under normal conditions.`,
+    intro1:    `I hope this email finds you well.\n\nAttached is the Candidate Briefing with our top two pre-screened and interviewed professionals for your consideration.\n\nBoth candidates are fully bilingual and have strong experience working with international standards and remote/hybrid environments.`,
+    intro2:    `Below you will find the actual interview recordings. These are 100% spontaneous and unscripted. The candidates did not have time to prepare written answers or rehearse. What you'll see is their real-time thinking, communication style, and authentic personality. This gives you a much more realistic view of how they perform under normal conditions.`,
     c1: getCandidateData('c1', 'Candidate One'),
     c2: getCandidateData('c2', 'Candidate Two'),
     c3: getCandidateData('c3', 'Candidate Three'),
