@@ -1703,7 +1703,7 @@ const esc = s => String(s)
   .replace(/</g,'&lt;')
   .replace(/>/g,'&gt;')
   .replace(/"/g,'&quot;');
-const flag = code => `https://flagcdn.com/w40/${code}.png`;
+const flag = code => `https://flagcdn.com/w160/${code}.png`;
 
 /* ══════════════════════════════════════════════
    EMAIL TEMPLATE BUILDER
@@ -1739,11 +1739,12 @@ function buildCandidateBlock(d, key) {
         <tr><td style="padding:22px 22px 20px">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
-              <!-- Avatar -->
-              <td width="50" valign="top" style="width:50px;padding-right:16px;vertical-align:top">
+              <!-- Flag (replaces avatar circle) -->
+              <td width="78" valign="top" style="width:78px;padding-right:16px;vertical-align:top">
                 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
-                  <td width="50" height="50"
-                      style="width:50px;height:50px;border-radius:50%;background:${s.avatar};font-size:0;line-height:0">&nbsp;
+                  <td width="78" height="52" style="width:78px;height:52px;border-radius:5px;overflow:hidden;font-size:0;line-height:0">
+                    <img src="${flag(c.country)}" alt="${esc(c.countryName)}" width="78" height="52"
+                         style="display:block;width:78px;height:52px;border-radius:5px;object-fit:cover;border:1px solid rgba(0,0,0,0.08)">
                   </td>
                 </tr></table>
               </td>
@@ -1753,8 +1754,6 @@ function buildCandidateBlock(d, key) {
                   ${esc(c.name)}
                 </div>
                 <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
-                  <img src="${flag(c.country)}" alt="${esc(c.countryName)}" width="24" height="16"
-                       style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
                   ${esc(c.countryName)} &nbsp;&middot;&nbsp; ${esc(c.exp)}
                 </div>
                 <span style="display:inline-block;background-color:${s.rateBg};color:${s.rateColor};font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
@@ -1860,11 +1859,12 @@ function buildEmail(d) {
         <tr><td style="padding:22px 22px 20px">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
-              <!-- Avatar -->
-              <td width="50" valign="top" style="width:50px;padding-right:16px;vertical-align:top">
+              <!-- Flag (replaces avatar circle) -->
+              <td width="78" valign="top" style="width:78px;padding-right:16px;vertical-align:top">
                 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
-                  <td width="50" height="50"
-                      style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6B9080 0%,#2C3E55 100%);font-size:0;line-height:0">&nbsp;
+                  <td width="78" height="52" style="width:78px;height:52px;border-radius:5px;overflow:hidden;font-size:0;line-height:0">
+                    <img src="${flag(d.c1.country)}" alt="${esc(d.c1.countryName)}" width="78" height="52"
+                         style="display:block;width:78px;height:52px;border-radius:5px;object-fit:cover;border:1px solid rgba(0,0,0,0.08)">
                   </td>
                 </tr></table>
               </td>
@@ -1874,8 +1874,6 @@ function buildEmail(d) {
                   ${esc(d.c1.name)}
                 </div>
                 <div style="font-family:'Inter',-apple-system,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6E7490;font-weight:600;margin-bottom:12px">
-                  <img src="${flag(d.c1.country)}" alt="${esc(d.c1.countryName)}" width="24" height="16"
-                       style="vertical-align:middle;border-radius:2px;margin-right:6px;display:inline">
                   ${esc(d.c1.countryName)} &nbsp;&middot;&nbsp; ${esc(d.c1.exp)}
                 </div>
                 <span style="display:inline-block;background-color:#D4E8E2;color:#2E6B5A;font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:100px;letter-spacing:0.02em">
