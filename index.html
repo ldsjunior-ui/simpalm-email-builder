@@ -224,6 +224,10 @@
     }
     .skill-rm:hover { opacity: 1; }
 
+    /* Hide Skills & Custom Skills form fields */
+    .fg:has([id$="-skill"]),
+    .fg:has([id$="-custom"]) { display: none !important; }
+
     /* Body */
     .app-body {
       display: flex;
@@ -1894,51 +1898,40 @@ function buildEmail(d) {
 
       ${['c2','c3','c4','c5','c6'].map(k => buildCandidateBlock(d, k)).join('')}
 
-      <!-- PRICING NOTE -->
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:22px">
-        <tr>
-          <td style="background-color:#1E2E40;border-radius:8px;padding:20px 24px">
-            <p style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:14px;color:rgba(247,242,234,0.92);line-height:1.78;margin:0">
-              Rates shown are
-              <strong style="color:#BF9A52;font-style:normal">all-inclusive</strong>
-              for a full-time dedicated Virtual Assistant &mdash; typically 160&nbsp;hours/month.
-              They cover Simpalm&rsquo;s sourcing, vetting, and ongoing support with
-              <span style="color:#9FBFB4;font-weight:600">no placement fees</span>.
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <!-- NEXT STEPS -->
+      <!-- NEXT STEPS — DECISION PHASE -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
         <tr>
           <td style="background-color:#D4E8E2;border-radius:10px;border:1px solid rgba(107,144,128,0.22);padding:22px 24px">
             <div style="font-family:'Inter',-apple-system,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#6B9080;font-weight:700;margin-bottom:18px">
-              How Would You Like to Proceed?
+              What&rsquo;s Your Next Step?
             </div>
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
+
+            <!-- OPTION A — ACCEPT -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:16px">
               <tr>
-                <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">01</td>
-                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Receive the <strong>full detailed resume${activeCandCount > 1 ? 's' : ''}</strong> for ${activeCandCount > 1 ? 'the candidates' : 'the candidate'}</td>
+                <td width="36" valign="top" style="padding-right:12px;vertical-align:top;padding-top:2px">
+                  <div style="width:28px;height:28px;border-radius:50%;background-color:#4A7C6F;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:28px;text-align:center">✅</div>
+                </td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">
+                  <strong>You&rsquo;re interested</strong> &mdash; just reply and we&rsquo;ll schedule a live interview with ${activeCandCount > 1 ? 'the candidate(s) of your choice' : 'the candidate'} within <strong>24 hours</strong>.
+                </td>
               </tr>
             </table>
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:12px">
-              <tr>
-                <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">02</td>
-                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Schedule a <strong>short call</strong> to discuss these candidates in detail</td>
-              </tr>
-            </table>
+
+            <!-- OPTION B — REJECT -->
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:20px">
               <tr>
-                <td width="36" valign="top" style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#BF9A52;font-weight:700;padding-right:12px;white-space:nowrap;vertical-align:top;padding-top:1px">03</td>
-                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">Arrange <strong>live interviews</strong> with the candidates directly</td>
+                <td width="36" valign="top" style="padding-right:12px;vertical-align:top;padding-top:2px">
+                  <div style="width:28px;height:28px;border-radius:50%;background-color:#BF9A52;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:28px;text-align:center">🔄</div>
+                </td>
+                <td valign="top" style="font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:#1E2736;line-height:1.65;vertical-align:top">
+                  <strong>Not the right fit?</strong> &mdash; share a quick note on what you&rsquo;d change, and we&rsquo;ll use your feedback to send a stronger match right away.
+                </td>
               </tr>
             </table>
+
             <p style="font-family:'Lora',Georgia,serif;font-style:italic;font-size:14px;color:#3D4358;line-height:1.75;margin:0">
-              Just reply with your preference and I&rsquo;ll make it happen right away.
-              Looking forward to helping you find the
-              <strong style="color:#1E2736;font-style:normal">perfect fit</strong>
-              for your team.
+              Either way, your reply moves things forward &mdash; we&rsquo;re ready to act the moment we hear from you.
             </p>
           </td>
         </tr>
