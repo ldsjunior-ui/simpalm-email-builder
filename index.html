@@ -2285,6 +2285,21 @@ const CV_GH_INBOX_API    = 'https://api.github.com/repos/ldsjunior-ui/simpalm-cv
 
 let cvIndex = [];
 
+// Filters out garbled index entries (LinkedIn slugs, sentences, glued text, etc.)
+// Returns true only for entries that plausibly represent a real person name
+function looksLikePersonName(name) {
+  if (!name || name.trim().length < 3) return false;
+  const n = name.trim();
+  if (n.toLowerCase().includes('http'))           return false; // URLs
+  if (/^(linkedin|name:|candidate$)/i.test(n))   return false; // prefixes / placeholder
+  if (/^[a-z]/.test(n))                          return false; // starts lowercase → slug or sentence
+  if (!n.includes(' ') && n.length > 22)         return false; // single glued word (e.g. "LANGUAGESTOOLS...")
+  if (n.split(/\s+/).length > 8)                 return false; // too many words → sentence/phrase
+  if (/\d{4,}/.test(n))                          return false; // long numeric run → slug/ID
+  if (/^(aptitudes|oversee|improve|dynamic|machine|program\s)/i.test(n)) return false;
+  return true;
+}
+
 // Returns a full entry object { previewUrl, downloadUrl, label } or null
 // Always uses GitHub raw URL — Drive URLs are blocked by Workspace admin policy
 function getCvEntry(candidate) {
@@ -2351,8 +2366,9 @@ function setupCvBlock(candidate) {
     const alpha  = (a, b) => (a.name || '').localeCompare(b.name || '');
     // source_file basename (e.g. "1762989808Resume_PDF…") so numeric-prefix searches work
     const srcOf  = cv => ((cv.source_file || cv.filename || '').split('/').pop()).toLowerCase();
-    const starts  = cvIndex.filter(cv => (cv.name  || '').toLowerCase().startsWith(ql)).sort(alpha);
-    const contains = cvIndex.filter(cv => {
+    const cleanIndex = cvIndex.filter(cv => looksLikePersonName(cv.name));
+    const starts  = cleanIndex.filter(cv => (cv.name  || '').toLowerCase().startsWith(ql)).sort(alpha);
+    const contains = cleanIndex.filter(cv => {
       const nm = (cv.name  || '').toLowerCase();
       const ti = (cv.title || '').toLowerCase();
       const sf = srcOf(cv);
