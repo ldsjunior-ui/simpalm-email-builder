@@ -14,11 +14,11 @@
       --green-lt:   #D4E8E2;
       --green-mid:  #9FBFB4;
       --gold:       #BF9A52;
-      --gold-dark:  #8B6914;
+      --gold-dark:  #765911; /* darkened from #8B6914 (was 3.91:1 on --gold-lt, now 5.03:1 — clears WCAG AA 4.5:1) */
       --gold-lt:    #F0E0C0;
       --dark:       #1E2736;
       --mid:        #3D4358;
-      --muted:      #6E7490;
+      --muted:      #636882; /* darkened from #6E7490 (was 3.95:1 on --card-alt, now 4.70:1 — clears WCAG AA 4.5:1) */
       --bg:         #E8E2D8;
       --card:       #F7F2EA;
       --card-alt:   #F2EDE4;
@@ -184,9 +184,12 @@
       white-space: nowrap;
     }
 
-    .btn-primary { background: var(--green); color: #fff; }
-    .btn-primary:hover { background: var(--green-dark); }
-    .btn-primary.ok { background: #27ae60; }
+    /* Resting state uses --green-dark, not --green — white text on --green is 3.54:1, below WCAG AA's
+       4.5:1 floor; --green-dark clears it at 6.24:1. Hover darkens further to --dark for a still-visible
+       affordance (previously the only compliant state WAS hover, invisible to anyone who never hovers). */
+    .btn-primary { background: var(--green-dark); color: #fff; }
+    .btn-primary:hover { background: var(--dark); }
+    .btn-primary.ok { background: #1B7A43; } /* was #27ae60 at 2.87:1 (found while auditing this block, not in the original 4-item list) — 5.37:1 now */
 
     .btn-ghost { background: rgba(255,255,255,.08); color: rgba(255,255,255,.75); }
     .btn-ghost:hover { background: rgba(255,255,255,.14); color: #fff; }
@@ -598,6 +601,13 @@
     }
     .toggle-switch input:checked + .toggle-slider { background: var(--green); }
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
+    /* The <input> itself is opacity:0/0x0 (visually replaced by .toggle-slider), so :focus-visible on the
+       input has nothing visible to outline directly — forward it onto the sibling slider instead.
+       Without this, tabbing to a candidate's Include toggle gave zero on-screen indication of focus. */
+    .toggle-switch input:focus-visible + .toggle-slider {
+      outline: 2px solid var(--dark);
+      outline-offset: 2px;
+    }
 
     /* dim candidate panel when toggled off */
     .fsec.candidate-hidden .fsec-body {
@@ -800,10 +810,10 @@
     }
     .pl-btn-refresh:hover { background: var(--border); }
     .pl-btn-trigger {
-      background: var(--green);
+      background: var(--green-dark); /* was var(--green) at 3.54:1, below WCAG AA — 6.24:1 now */
       color: #fff;
     }
-    .pl-btn-trigger:hover { background: var(--green-dark); }
+    .pl-btn-trigger:hover { background: var(--dark); }
     .pl-btn-trigger:disabled { opacity: .4; cursor: default; }
     .pl-btn-trigger.spinning { opacity: .7; cursor: wait; }
 
@@ -992,7 +1002,7 @@
     .pl-btn-process {
       width: 100%;
       height: 34px;
-      background: var(--green);
+      background: var(--green-dark); /* was var(--green) at 3.54:1, below WCAG AA — 6.24:1 now */
       color: #fff;
       border: none;
       border-radius: 6px;
@@ -1007,7 +1017,7 @@
       gap: 5px;
     }
     .pl-btn-process:disabled { opacity: .38; cursor: default; }
-    .pl-btn-process:not(:disabled):hover { background: var(--green-dark); }
+    .pl-btn-process:not(:disabled):hover { background: var(--dark); }
 
     .pl-proc-status {
       margin-top: 8px;
@@ -1098,6 +1108,10 @@
       Simpalm<span class="dot">&middot;</span>Staffing
       <span class="sep">|</span>
       <span style="font-weight:400; opacity:.7; letter-spacing:.06em">PalmDeck</span>
+      <!-- Stays visible while the sidebar scrolls (header is flex-shrink:0, sidebar scrolls independently)
+           so it's always clear how many of the up-to-6 candidates are actually toggled on, without
+           scrolling past every card to check each Include switch individually. -->
+      <span id="candidate-count-badge" style="font-weight:600;font-size:11px;letter-spacing:.04em;opacity:.85;background:rgba(255,255,255,.1);padding:3px 9px;border-radius:100px;margin-left:2px"></span>
     </div>
     <div class="hdr-actions">
       <button class="btn btn-primary" id="btn-copy">&#8984; Copy Email</button>
@@ -1172,7 +1186,7 @@
             <div class="fg">
               <label class="fl">Country</label>
               <div class="flag-row">
-                <select class="fs" id="f-c1c"></select>
+                <select class="fs" id="f-c1c" aria-label="Country"></select>
                 <div class="flag-wrap">
                   <img class="flag-img" id="fi1" src="https://flagcdn.com/w40/br.png" alt="Flag">
                 </div>
@@ -1192,8 +1206,9 @@
               <label class="fl">CV File</label>
               <div class="cv-search-wrap">
                 <input class="fi cv-search-inp" type="text" id="f-c1-cv-search"
-                       placeholder="Search candidate by name…" autocomplete="off">
-                <div class="cv-results" id="f-c1-cv-results"></div>
+                       placeholder="Search candidate by name…" autocomplete="off"
+                       role="combobox" aria-expanded="false" aria-controls="f-c1-cv-results" aria-autocomplete="list" aria-haspopup="listbox">
+                <div class="cv-results" id="f-c1-cv-results" role="listbox"></div>
               </div>
               <div class="cv-chip" id="f-c1-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c1-cv-chip-name"></span>
@@ -1261,7 +1276,7 @@
             <div class="fg">
               <label class="fl">Country</label>
               <div class="flag-row">
-                <select class="fs" id="f-c2c"></select>
+                <select class="fs" id="f-c2c" aria-label="Country"></select>
                 <div class="flag-wrap">
                   <img class="flag-img" id="fi2" src="https://flagcdn.com/w40/br.png" alt="Flag">
                 </div>
@@ -1281,8 +1296,9 @@
               <label class="fl">CV File</label>
               <div class="cv-search-wrap">
                 <input class="fi cv-search-inp" type="text" id="f-c2-cv-search"
-                       placeholder="Search candidate by name…" autocomplete="off">
-                <div class="cv-results" id="f-c2-cv-results"></div>
+                       placeholder="Search candidate by name…" autocomplete="off"
+                       role="combobox" aria-expanded="false" aria-controls="f-c2-cv-results" aria-autocomplete="list" aria-haspopup="listbox">
+                <div class="cv-results" id="f-c2-cv-results" role="listbox"></div>
               </div>
               <div class="cv-chip" id="f-c2-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c2-cv-chip-name"></span>
@@ -1343,7 +1359,7 @@
             <div class="fg">
               <label class="fl">Country</label>
               <div class="flag-row">
-                <select class="fs" id="f-c3c"></select>
+                <select class="fs" id="f-c3c" aria-label="Country"></select>
                 <div class="flag-wrap"><img class="flag-img" id="fi3" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
               </div>
             </div>
@@ -1352,8 +1368,8 @@
             <div class="fg cv-block">
               <label class="fl">CV File</label>
               <div class="cv-search-wrap">
-                <input class="fi cv-search-inp" type="text" id="f-c3-cv-search" placeholder="Search candidate by name…" autocomplete="off">
-                <div class="cv-results" id="f-c3-cv-results"></div>
+                <input class="fi cv-search-inp" type="text" id="f-c3-cv-search" placeholder="Search candidate by name…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="f-c3-cv-results" aria-autocomplete="list" aria-haspopup="listbox">
+                <div class="cv-results" id="f-c3-cv-results" role="listbox"></div>
               </div>
               <div class="cv-chip" id="f-c3-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c3-cv-chip-name"></span>
@@ -1397,7 +1413,7 @@
             <div class="fg">
               <label class="fl">Country</label>
               <div class="flag-row">
-                <select class="fs" id="f-c4c"></select>
+                <select class="fs" id="f-c4c" aria-label="Country"></select>
                 <div class="flag-wrap"><img class="flag-img" id="fi4" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
               </div>
             </div>
@@ -1406,8 +1422,8 @@
             <div class="fg cv-block">
               <label class="fl">CV File</label>
               <div class="cv-search-wrap">
-                <input class="fi cv-search-inp" type="text" id="f-c4-cv-search" placeholder="Search candidate by name…" autocomplete="off">
-                <div class="cv-results" id="f-c4-cv-results"></div>
+                <input class="fi cv-search-inp" type="text" id="f-c4-cv-search" placeholder="Search candidate by name…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="f-c4-cv-results" aria-autocomplete="list" aria-haspopup="listbox">
+                <div class="cv-results" id="f-c4-cv-results" role="listbox"></div>
               </div>
               <div class="cv-chip" id="f-c4-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c4-cv-chip-name"></span>
@@ -1451,7 +1467,7 @@
             <div class="fg">
               <label class="fl">Country</label>
               <div class="flag-row">
-                <select class="fs" id="f-c5c"></select>
+                <select class="fs" id="f-c5c" aria-label="Country"></select>
                 <div class="flag-wrap"><img class="flag-img" id="fi5" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
               </div>
             </div>
@@ -1460,8 +1476,8 @@
             <div class="fg cv-block">
               <label class="fl">CV File</label>
               <div class="cv-search-wrap">
-                <input class="fi cv-search-inp" type="text" id="f-c5-cv-search" placeholder="Search candidate by name…" autocomplete="off">
-                <div class="cv-results" id="f-c5-cv-results"></div>
+                <input class="fi cv-search-inp" type="text" id="f-c5-cv-search" placeholder="Search candidate by name…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="f-c5-cv-results" aria-autocomplete="list" aria-haspopup="listbox">
+                <div class="cv-results" id="f-c5-cv-results" role="listbox"></div>
               </div>
               <div class="cv-chip" id="f-c5-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c5-cv-chip-name"></span>
@@ -1505,7 +1521,7 @@
             <div class="fg">
               <label class="fl">Country</label>
               <div class="flag-row">
-                <select class="fs" id="f-c6c"></select>
+                <select class="fs" id="f-c6c" aria-label="Country"></select>
                 <div class="flag-wrap"><img class="flag-img" id="fi6" src="https://flagcdn.com/w40/br.png" alt="Flag"></div>
               </div>
             </div>
@@ -1514,8 +1530,8 @@
             <div class="fg cv-block">
               <label class="fl">CV File</label>
               <div class="cv-search-wrap">
-                <input class="fi cv-search-inp" type="text" id="f-c6-cv-search" placeholder="Search candidate by name…" autocomplete="off">
-                <div class="cv-results" id="f-c6-cv-results"></div>
+                <input class="fi cv-search-inp" type="text" id="f-c6-cv-search" placeholder="Search candidate by name…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="f-c6-cv-results" aria-autocomplete="list" aria-haspopup="listbox">
+                <div class="cv-results" id="f-c6-cv-results" role="listbox"></div>
               </div>
               <div class="cv-chip" id="f-c6-cv-chip" style="display:none">
                 <span class="cv-chip-name" id="f-c6-cv-chip-name"></span>
@@ -1706,6 +1722,27 @@ function skillPills(arr) {
   ).join('');
 }
 
+/* Bulletproof pill button — Outlook desktop (Word rendering engine) silently drops border-radius on a
+   plain <a>, so the "Watch Interview"/"View CV" CTAs would render as square-cornered rectangles there.
+   Outlook DOES render VML, so mso gets a <v:roundrect> (a fixed-width shape, arcsize~50% ≈ a full pill
+   at this button height) and every other client gets the normal fluid, padding-based <a>. topMargin lets
+   the "View CV" button (which sits below "Watch Interview") keep its margin-top in the non-mso branch;
+   Outlook's own table row spacing handles the VML branch's vertical gap. */
+function bulletproofButton(href, bgColor, label, iconEntity, vmlWidth, topMargin) {
+  const url = esc(href);
+  const marginStyle = topMargin ? `margin-top:${topMargin}px;` : '';
+  return `<!--[if mso]>
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${url}" style="height:38px;v-text-anchor:middle;width:${vmlWidth}px;${topMargin ? `margin-top:${topMargin}px;` : ''}" arcsize="50%" fillcolor="${bgColor}" stroke="false">
+<center style="color:#ffffff;font-family:Arial,sans-serif;font-size:11.5px;font-weight:bold;letter-spacing:0.06em">${esc(label)}</center>
+</v:roundrect>
+<!-- VML text deliberately omits the icon glyph (▶/📄) — dingbat/emoji rendering inside a v:roundrect's
+     <center> is unreliable across Outlook versions; the plain label alone is the safe, tested pattern -->
+<![endif]-->
+<!--[if !mso]><!-->
+<a href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-block;${marginStyle}background-color:${bgColor};color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">${iconEntity}&nbsp;${esc(label)}</a>
+<!--<![endif]-->`;
+}
+
 /* Candidate colour palette — c1 kept for reference, c2–c6 used in buildCandidateBlock */
 const CAND_STYLES = {
   c1: { accent:'#6B9080', rateBg:'#D4E8E2', rateColor:'#2E6B5A', avatar:'linear-gradient(135deg,#6B9080 0%,#2C3E55 100%)' },
@@ -1753,11 +1790,8 @@ function buildCandidateBlock(d, key) {
               </td>
               <!-- Button -->
               <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
-                <a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer"
-                   style="display:inline-block;background-color:${s.accent};color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
-                  &#9654;&nbsp;Watch Interview
-                </a>
-                ${c.cvUrl ? `<br><a href="${esc(c.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:${s.accent};color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>` : ''}
+                ${bulletproofButton(c.url, s.accent, 'Watch Interview', '&#9654;', 150, 0)}
+                ${c.cvUrl ? '<br>' + bulletproofButton(c.cvUrl, s.accent, 'View CV', '&#128196;', 110, 8) : ''}
               </td>
             </tr>
             ${c.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(c.skills)}</td></tr>` : ''}
@@ -1773,8 +1807,10 @@ function buildEmail(d) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Candidate Briefing &mdash; ${esc(d.company)} &middot; Simpalm Staffing</title>
-<meta name="description" content="Candidate briefing for ${esc(d.company)} — Simpalm Staffing.">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Candidate Briefing &middot; Simpalm Staffing</title>
+<meta name="description" content="Candidate briefing package from Simpalm Staffing.">
 <style type="text/css">
 @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format('truetype')}
 @font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf) format('truetype')}
@@ -1799,8 +1835,9 @@ function buildEmail(d) {
 <table class="email-card" width="620" cellpadding="0" cellspacing="0" border="0" role="presentation"
        style="width:620px;max-width:100%;background-color:#F7F2EA;border-radius:8px;box-shadow:0 2px 6px rgba(30,39,54,0.06),0 10px 32px rgba(30,39,54,0.11)">
 
-  <!-- TOP STRIPE -->
-  <tr><td height="4" style="height:4px;line-height:4px;font-size:0;background:linear-gradient(90deg,#6B9080 0%,#9FBFB4 55%,#BF9A52 100%)">&nbsp;</td></tr>
+  <!-- TOP STRIPE — bgcolor attribute + solid background-color is the Outlook fallback; Outlook desktop's
+       Word engine drops the CSS gradient silently and would otherwise render this stripe blank/white -->
+  <tr><td height="4" bgcolor="#6B9080" style="height:4px;line-height:4px;font-size:0;background-color:#6B9080;background:linear-gradient(90deg,#6B9080 0%,#9FBFB4 55%,#BF9A52 100%)">&nbsp;</td></tr>
 
   <!-- HEADER -->
   <tr>
@@ -1884,11 +1921,8 @@ function buildEmail(d) {
               </td>
               <!-- Button -->
               <td class="btn-cell" width="148" valign="top" align="right" style="width:148px;vertical-align:top;text-align:right;padding-top:2px">
-                <a href="${esc(d.c1.url)}" target="_blank" rel="noopener noreferrer"
-                   style="display:inline-block;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">
-                  &#9654;&nbsp;Watch Interview
-                </a>
-                ${d.c1.cvUrl ? `<br><a href="${esc(d.c1.cvUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;background-color:#6B9080;color:#ffffff;font-family:'Inter',-apple-system,sans-serif;font-size:11.5px;font-weight:700;padding:11px 18px;border-radius:100px;text-decoration:none;letter-spacing:0.06em;white-space:nowrap;mso-padding-alt:11px 18px">&#128196;&nbsp;View CV</a>` : ''}
+                ${bulletproofButton(d.c1.url, '#6B9080', 'Watch Interview', '&#9654;', 150, 0)}
+                ${d.c1.cvUrl ? '<br>' + bulletproofButton(d.c1.cvUrl, '#6B9080', 'View CV', '&#128196;', 110, 8) : ''}
               </td>
             </tr>
             ${d.c1.skills.length ? `<tr><td></td><td colspan="2" style="padding-top:12px;line-height:1.8">${skillPills(d.c1.skills)}</td></tr>` : ''}
@@ -2046,6 +2080,24 @@ function formatRate(raw) {
 }
 
 /* ══════════════════════════════════════════════
+   URL SANITIZER  (Interview URL field — free text, so it's the one place a
+   javascript:/data:/vbscript: scheme could get typed or pasted in)
+══════════════════════════════════════════════ */
+function sanitizeUrl(raw) {
+  const trimmed = (raw || '').trim();
+  if (!trimmed || trimmed === '#') return '#';
+  // esc() (used everywhere this lands in an href=""/HTML attribute) escapes &<>" for markup safety,
+  // but does nothing about the URL's SCHEME — a pasted "javascript:..." interview link would still
+  // execute if clicked from openPreview()/copyHTML()'s unsandboxed window.open(). Reject any explicit
+  // non-http(s) scheme outright rather than trying to guess which ones are "probably fine."
+  const schemeMatch = trimmed.match(/^([a-z][a-z0-9+.-]*):/i);
+  if (schemeMatch && !/^https?$/i.test(schemeMatch[1])) return '#';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^\/\//.test(trimmed)) return 'https:' + trimmed;          // protocol-relative //host/path
+  return 'https://' + trimmed; // no scheme at all (bare "domain.com/path") — assume https, don't drop the link
+}
+
+/* ══════════════════════════════════════════════
    FORM DATA
 ══════════════════════════════════════════════ */
 function getCandidateData(k, fallback) {
@@ -2057,7 +2109,7 @@ function getCandidateData(k, fallback) {
     countryName: info.name,
     exp:         val(`f-${k}e`)  || 'Years Experience',
     rate:        formatRate(val(`f-${k}r`)),
-    url:         val(`f-${k}u`)  || '#',
+    url:         sanitizeUrl(val(`f-${k}u`)),
     skills:      [...skills[k], ...customSkills[k]],
     cvUrl:       getCvShareUrl(k),
   };
@@ -2116,7 +2168,14 @@ function openPreview() {
   const html = buildEmail(getData());
   const blob = new Blob([html], { type: 'text/html' });
   const url  = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  const w = window.open(url, '_blank');
+  if (!w) {
+    // Same guard copyHTML() already has for the identical window.open() pattern — without it, a
+    // blocked popup here did nothing at all: no new tab, no toast, no error, no clue why.
+    toast('Popup bloqueado — permita popups para este site e tente novamente.', 'err');
+    URL.revokeObjectURL(url);
+    return;
+  }
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
@@ -2185,6 +2244,7 @@ function resetForm() {
     const panel = $(`fsec-${k}`);
     if (panel) panel.classList.add('candidate-hidden');
   });
+  updateCandidateCountBadge();
   updatePreview();
   clearDraft();
   toast('Form cleared.', 'ok');
@@ -2404,6 +2464,7 @@ function showApp() {
       if (!toggle) return;
       toggle.addEventListener('change', () => {
         $(`fsec-${k}`).classList.toggle('candidate-hidden', !toggle.checked);
+        updateCandidateCountBadge();
         schedulePreview();
       });
     });
@@ -2429,9 +2490,22 @@ function showApp() {
   }
 
   restoreDraft();     // rehydrate any autosaved form state before the first render — safe to rerun on re-login
+  updateCandidateCountBadge(); // reflects whatever restoreDraft() just set the toggles to
   updatePreview();
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox — safe to rerun on re-login
+}
+
+/* "N of 6 included" header badge — see the toggle-change listener above and resetForm() below for
+   the other two places this needs to stay in sync. */
+function updateCandidateCountBadge() {
+  const badge = $('candidate-count-badge');
+  if (!badge) return;
+  const included = 1 + ['c2','c3','c4','c5','c6'].filter(k => {
+    const t = $(`toggle-${k}`);
+    return t && t.checked;
+  }).length;
+  badge.textContent = `${included} of 6 included`;
 }
 
 /* ══════════════════════════════════════════════
@@ -2499,6 +2573,20 @@ function setupCvBlock(candidate) {
 
   let activeIdx = -1;   // keyboard-navigation cursor
 
+  // Screen-reader wiring for the combobox/listbox pattern: results.style.display alone told a sighted
+  // user the dropdown opened/closed, but nothing announced that to a screen reader (no aria-expanded)
+  // and arrow-key navigation moved a purely visual .active class with no aria-activedescendant, so a
+  // screen-reader user could pick a CV with zero announcement of what was highlighted.
+  function openResults() {
+    results.style.display = 'block';
+    searchInp.setAttribute('aria-expanded', 'true');
+  }
+  function closeResults() {
+    results.style.display = 'none';
+    searchInp.setAttribute('aria-expanded', 'false');
+    searchInp.removeAttribute('aria-activedescendant');
+  }
+
   // Highlight the matched substring inside a name, escaping HTML first
   function hlMatch(text, q) {
     if (!text) return '';
@@ -2513,8 +2601,17 @@ function setupCvBlock(candidate) {
 
   function setActive(idx) {
     const items = results.querySelectorAll('.cv-result-item');
-    items.forEach((el, i) => el.classList.toggle('active', i === idx));
-    if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+    items.forEach((el, i) => {
+      const isActive = i === idx;
+      el.classList.toggle('active', isActive);
+      el.setAttribute('aria-selected', String(isActive));
+    });
+    if (items[idx]) {
+      items[idx].scrollIntoView({ block: 'nearest' });
+      searchInp.setAttribute('aria-activedescendant', items[idx].id);
+    } else {
+      searchInp.removeAttribute('aria-activedescendant');
+    }
     activeIdx = idx;
   }
 
@@ -2522,7 +2619,7 @@ function setupCvBlock(candidate) {
     const ql = (q || '').toLowerCase().trim();
     activeIdx = -1;
 
-    if (!ql.length) { results.style.display = 'none'; results.innerHTML = ''; return; }
+    if (!ql.length) { closeResults(); results.innerHTML = ''; return; }
 
     // Split into two ranked groups: name starts-with > name contains / title / source filename
     const alpha  = (a, b) => (a.name || '').localeCompare(b.name || '');
@@ -2538,10 +2635,11 @@ function setupCvBlock(candidate) {
     }).sort(alpha);
 
     const all = [...starts, ...contains];
-    if (!all.length) { results.style.display = 'none'; results.innerHTML = ''; return; }
+    if (!all.length) { closeResults(); results.innerHTML = ''; return; }
 
     results.innerHTML = '';
 
+    let optionIndex = 0;
     const addGroup = (list, label) => {
       if (!list.length) return;
       if (label) {
@@ -2553,6 +2651,9 @@ function setupCvBlock(candidate) {
       list.forEach(cv => {
         const item = document.createElement('div');
         item.className = 'cv-result-item';
+        item.id = `f-${candidate}-cv-opt-${optionIndex++}`;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', 'false');
         item.innerHTML =
           `<span class="cv-ri-name">${hlMatch(cv.name, q)}</span>` +
           (cv.title ? `<span class="cv-ri-title">${esc(cv.title)}</span>` : '');
@@ -2566,7 +2667,7 @@ function setupCvBlock(candidate) {
     addGroup(starts,   showLabels ? 'Best match' : null);
     addGroup(contains, showLabels ? 'Also found' : null);
 
-    results.style.display = 'block';
+    openResults();
   }
 
   function pickCandidate(cv) {
@@ -2574,7 +2675,7 @@ function setupCvBlock(candidate) {
     chipName.textContent    = cv.name;
     chip.style.display      = 'flex';
     searchInp.style.display = 'none';
-    results.style.display   = 'none';
+    closeResults();
     results.innerHTML       = '';
     activeIdx               = -1;
     schedulePreview();
@@ -2593,7 +2694,7 @@ function setupCvBlock(candidate) {
   searchInp.addEventListener('focus', () => {
     if (!searchInp.value && cvIndex.length) {
       results.innerHTML = `<div style="padding:7px 10px;font-size:10.5px;color:var(--muted);font-style:italic">${cvIndex.length} candidate${cvIndex.length !== 1 ? 's' : ''} available — type to search</div>`;
-      results.style.display = 'block';
+      openResults();
     } else {
       renderResults(searchInp.value);
     }
@@ -2601,7 +2702,7 @@ function setupCvBlock(candidate) {
 
   searchInp.addEventListener('input', () => { activeIdx = -1; renderResults(searchInp.value); });
 
-  searchInp.addEventListener('blur',  () => setTimeout(() => { results.style.display = 'none'; activeIdx = -1; }, 160));
+  searchInp.addEventListener('blur',  () => setTimeout(() => { closeResults(); activeIdx = -1; }, 160));
 
   // ── Keyboard navigation ───────────────────────────────────────────
   searchInp.addEventListener('keydown', e => {
@@ -2618,7 +2719,7 @@ function setupCvBlock(candidate) {
       e.preventDefault();
       items[activeIdx].dispatchEvent(new MouseEvent('mousedown'));
     } else if (e.key === 'Escape') {
-      results.style.display = 'none';
+      closeResults();
       activeIdx = -1;
     }
   });
@@ -2705,6 +2806,19 @@ function autoFillFromCv(candidate) {
   if (!cv) {
     toast('CV entry not found in index.', 'err');
     return;
+  }
+
+  // Auto-fill unconditionally overwrites Name/Country/Experience below with no confirmation and no
+  // undo — the only confirm() gate in the whole tool was the full-form Reset. A recruiter who
+  // hand-corrects a field (fixes a CV-parser name typo, updates a phone-verified years-of-experience)
+  // and later re-triggers Auto-fill on the same chip (easy since it sits right next to Preview/Clear)
+  // would otherwise silently lose that correction with only a generic success toast as feedback.
+  const nameField = $(`f-${candidate}n`);
+  const expField  = $(`f-${candidate}e`);
+  const hasExistingData = (nameField && nameField.value.trim()) || (expField && expField.value.trim());
+  if (hasExistingData) {
+    const ok = confirm(`This candidate already has data entered. Auto-fill from "${cv.name}" will overwrite Name/Country/Experience/Skills. Continue?`);
+    if (!ok) return;
   }
 
   // 1. Full name
@@ -2817,6 +2931,7 @@ async function loadCvIndex() {
 // State
 let _pollTimer          = null;   // interval while GH Actions is running
 let _elapsedTimer       = null;   // interval updating elapsed time display
+let _processingIsReprocess = false; // true when the triggered file was already in index.json — see _pollForCV
 let _processingFilename = null;   // Drive filename currently being processed
 let _processingStarted  = null;   // Date.now() when push was sent
 
@@ -3027,6 +3142,17 @@ async function processSelectedCV() {
     const res  = await fetch(url, { signal: ctrl.signal });
     clearTimeout(abortTimer);
     clearTimeout(warmTimer);
+
+    if (!res.ok) {
+      // Apps Script auth/quota/500 errors typically return an HTML error page, not JSON — catching
+      // this here gives a real HTTP-status message instead of letting res.json() throw a cryptic
+      // "Unexpected token '<'" SyntaxError down in the catch block below.
+      status.innerHTML = `❌ GitHub Actions trigger failed (HTTP ${res.status}). Check the Apps Script deployment logs.`;
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Process Selected CV';
+      return;
+    }
+
     const data = await res.json();
 
     if (!data.ok) {
@@ -3037,6 +3163,7 @@ async function processSelectedCV() {
     }
 
     // Triggered — start real-time tracking
+    _processingIsReprocess = isProcessed; // see _pollForCV: a reprocess must not false-positive off the stale entry
     _processingFilename = fileName;
     _processingStarted  = Date.now();
     btn.innerHTML = '⏳ Processing…';
@@ -3070,7 +3197,38 @@ async function processSelectedCV() {
 
 // ── Poll index.json until the processed CV appears ───────────────────────────
 
+const POLL_TIMEOUT_SECONDS = 600; // 10 min ceiling — a real run finishes in 2-3 min; past this, stop
+                                   // polling forever and surface a clear error instead of a permanently
+                                   // stuck "Processing…" that only a page reload could ever recover from.
+
+function _pollGiveUp(message) {
+  clearInterval(_pollTimer);
+  clearInterval(_elapsedTimer);
+  _pollTimer    = null;
+  _elapsedTimer = null;
+  _processingFilename = null;
+  _processingIsReprocess = false;
+
+  const status = $('pl-proc-status');
+  const btn    = $('pl-btn-trigger');
+  if (status) status.innerHTML = message;
+  if (btn) {
+    btn.innerHTML = '⚡ Process Selected CV';
+    btn.disabled  = !$('pl-cv-select')?.value;
+  }
+}
+
 async function _pollForCV(inboxFilename) {
+  const elapsed = Math.floor((Date.now() - _processingStarted) / 1000);
+
+  if (elapsed >= POLL_TIMEOUT_SECONDS) {
+    _pollGiveUp(
+      `⚠ No response from the pipeline after ${Math.floor(POLL_TIMEOUT_SECONDS / 60)} min — the GitHub ` +
+      `Actions run may have failed or is stuck. Check the Actions log, then try Process Selected CV again.`
+    );
+    return;
+  }
+
   try {
     const res = await fetch(CV_GH_INDEX_URL, { cache: 'no-store' });
     if (!res.ok) return;
@@ -3084,13 +3242,20 @@ async function _pollForCV(inboxFilename) {
 
     if (!found) return; // not done yet
 
+    // Reprocessing an already-processed CV: index.json carries no timestamp field to distinguish a
+    // fresh run's entry from the prior run's still-stale one (checked upstream — process_cv.py writes
+    // name/title/location/filename/processed/source_file[/skills/years_experience], nothing dated).
+    // A real run takes ~2-3 min per this UI's own copy, so require a minimum wait before trusting a
+    // match on a reprocess — otherwise the very first 5s poll tick false-positives off the old entry
+    // still sitting in the index, silently assigning the "fixed" CV before the real fix has landed.
+    if (_processingIsReprocess && elapsed < 60) return; // not proven fresh yet — keep polling
+
     // ── Done! ────────────────────────────────────────────────────
     clearInterval(_pollTimer);
     clearInterval(_elapsedTimer);
     _pollTimer    = null;
     _elapsedTimer = null;
 
-    const elapsed = Math.floor((Date.now() - _processingStarted) / 1000);
     const timeStr = elapsed >= 60 ? `${Math.floor(elapsed/60)}m ${elapsed%60}s` : `${elapsed}s`;
 
     const status = $('pl-proc-status');
@@ -3101,13 +3266,15 @@ async function _pollForCV(inboxFilename) {
       `<span style="font-size:10px;color:var(--muted)">Now available in the candidate list below.</span>`;
 
     _processingFilename = null;
+    _processingIsReprocess = false;
     btn.innerHTML = '⚡ Process Selected CV';
     btn.disabled  = !$('pl-cv-select').value;
 
     _cvNotify([found.name]);
     await loadInboxFiles();  // refresh dropdown + processed list + c1/c2
 
-  } catch { /* ignore transient errors */ }
+  } catch { /* transient network error on this ONE poll tick — the interval keeps retrying, and
+               POLL_TIMEOUT_SECONDS above still bounds the total wait even if errors keep recurring */ }
 }
 
 // Wire up pipeline buttons + dropdown change
