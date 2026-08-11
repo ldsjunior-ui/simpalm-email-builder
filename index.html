@@ -2084,6 +2084,7 @@ function updatePreview() {
       frame.style.height = '820px';
     }
   };
+  saveDraft(); // piggyback on the existing debounced preview cycle — no extra listeners needed
 }
 
 let _pt;
@@ -2153,6 +2154,13 @@ function resetForm() {
     if (skillSel) skillSel.value = '';
     const customInp = $(`f-${k}-custom`);
     if (customInp) customInp.value = '';
+    // Clear any picked CV (registry select + chip aren't .fi/.fta, so they survive the wipe above otherwise)
+    const cvReg = $(`f-${k}-cv-registry`);
+    if (cvReg) cvReg.value = '';
+    const cvChip = $(`f-${k}-cv-chip`);
+    if (cvChip) cvChip.style.display = 'none';
+    const cvSearch = $(`f-${k}-cv-search`);
+    if (cvSearch) cvSearch.style.display = '';
   });
   // Collapse c3–c6 panels and uncheck their toggles
   ['c3','c4','c5','c6'].forEach(k => {
@@ -2162,7 +2170,112 @@ function resetForm() {
     if (panel) panel.classList.add('candidate-hidden');
   });
   updatePreview();
+  clearDraft();
   toast('Form cleared.', 'ok');
+}
+
+/* ══════════════════════════════════════════════
+   AUTOSAVE DRAFT  (localStorage — survives refresh/crash/tab close)
+══════════════════════════════════════════════ */
+const DRAFT_KEY = 'palmdeck_draft_v1';
+
+function saveDraft() {
+  try {
+    const fields = {};
+    document.querySelectorAll('.fi, .fta, .fs').forEach(el => { if (el.id) fields[el.id] = el.value; });
+
+    const toggles = {};
+    ['c2','c3','c4','c5','c6'].forEach(k => {
+      const t = $(`toggle-${k}`);
+      if (t) toggles[k] = t.checked;
+    });
+
+    const cv = {};
+    ['c1','c2','c3','c4','c5','c6'].forEach(k => {
+      const reg = $(`f-${k}-cv-registry`);
+      if (reg && reg.value) {
+        const nameEl = $(`f-${k}-cv-chip-name`);
+        cv[k] = { filename: reg.value, name: nameEl ? nameEl.textContent : '' };
+      }
+    });
+
+    const draft = {
+      ts: Date.now(),
+      fields,
+      skills: JSON.parse(JSON.stringify(skills)),
+      customSkills: JSON.parse(JSON.stringify(customSkills)),
+      toggles,
+      cv,
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch (e) {
+    // localStorage unavailable (private browsing, quota exceeded) — autosave is best-effort, never break the app
+  }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+}
+
+function restoreDraft() {
+  let draft;
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    draft = JSON.parse(raw);
+  } catch (e) { return; }
+  if (!draft || typeof draft !== 'object') return;
+
+  // Only restore if there is actually something worth restoring
+  const hasFieldValue = draft.fields && Object.values(draft.fields).some(v => v && String(v).trim());
+  const hasCv = draft.cv && Object.keys(draft.cv).length > 0;
+  if (!hasFieldValue && !hasCv) return;
+
+  // Plain inputs / textareas / selects (country + skill dropdowns)
+  Object.entries(draft.fields || {}).forEach(([id, value]) => {
+    const el = $(id);
+    if (el) el.value = value;
+  });
+
+  // Sync flag images to restored country selects (programmatic .value= doesn't fire 'change')
+  ['c1','c2','c3','c4','c5','c6'].forEach((k, i) => {
+    const sel = $(`f-${k}c`);
+    const fi  = $(`fi${i + 1}`);
+    if (sel && sel.value && fi) fi.src = flag(sel.value);
+  });
+
+  // Skills / custom skills chips
+  ['c1','c2','c3','c4','c5','c6'].forEach(k => {
+    if (draft.skills && Array.isArray(draft.skills[k])) skills[k] = draft.skills[k];
+    if (draft.customSkills && Array.isArray(draft.customSkills[k])) customSkills[k] = draft.customSkills[k];
+    renderChips(k);
+    renderCustomChips(k);
+  });
+
+  // Candidate toggles (c2–c6) — expand/collapse panel to match
+  ['c2','c3','c4','c5','c6'].forEach(k => {
+    if (!draft.toggles || !(k in draft.toggles)) return;
+    const t = $(`toggle-${k}`);
+    const panel = $(`fsec-${k}`);
+    if (t) t.checked = draft.toggles[k];
+    if (panel) panel.classList.toggle('candidate-hidden', !draft.toggles[k]);
+  });
+
+  // Picked CV chips
+  ['c1','c2','c3','c4','c5','c6'].forEach(k => {
+    const info = draft.cv && draft.cv[k];
+    if (!info) return;
+    const reg    = $(`f-${k}-cv-registry`);
+    const chip   = $(`f-${k}-cv-chip`);
+    const nameEl = $(`f-${k}-cv-chip-name`);
+    const search = $(`f-${k}-cv-search`);
+    if (reg)    reg.value = info.filename;
+    if (nameEl) nameEl.textContent = info.name;
+    if (chip)   chip.style.display = 'flex';
+    if (search) search.style.display = 'none';
+  });
+
+  toast('Previous draft restored.', 'ok');
 }
 
 /* ══════════════════════════════════════════════
@@ -2247,6 +2360,7 @@ function showApp() {
     });
   });
 
+  restoreDraft();     // rehydrate any autosaved form state before the first render
   updatePreview();
   loadCvIndex();
   loadInboxFiles();   // populate pipeline dropdown from Drive inbox
@@ -2980,7 +3094,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('btn-copy').addEventListener('click', copyHTML);
   $('btn-preview').addEventListener('click', openPreview);
-  $('btn-reset').addEventListener('click', resetForm);
+  $('btn-reset').addEventListener('click', () => {
+    if (!confirm('Clear the entire form? All candidates, CV picks, and skills will be lost. This cannot be undone.')) return;
+    resetForm();
+  });
   $('btn-logout').addEventListener('click', doLogout);
 
   // ── CV Preview Modal ──────────────────────────────────────────────────────
