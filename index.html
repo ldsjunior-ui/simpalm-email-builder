@@ -2247,14 +2247,28 @@ function restoreDraft() {
   const hasCv = draft.cv && Object.keys(draft.cv).length > 0;
   if (!hasFieldValue && !hasCv) return;
 
-  // Plain inputs / textareas / selects (country + skill dropdowns)
+  // Candidates toggled OFF at save time don't get their underlying data restored — only the toggle
+  // state itself. Without this, a candidate hidden for Client A's email (data left in the now-hidden
+  // inputs, same-session toggle-off/on already relies on that) comes back populated with Client A's
+  // name/rate/CV/skills the next time the SAME candidate slot is toggled on for a totally different
+  // client, silently, with the generic "Previous draft restored" toast giving no hint it happened.
+  const hiddenCandidates = new Set(
+    ['c2','c3','c4','c5','c6'].filter(k => draft.toggles && draft.toggles[k] === false)
+  );
+
+  // Plain inputs / textareas / selects (country + skill dropdowns) — skip fields belonging to a
+  // candidate that was toggled off (id pattern f-c2..., f-c3..., etc.); non-candidate fields
+  // (f-rec, f-mo, f-site, f-unsub) and c1 (no toggle, always included) always restore.
   Object.entries(draft.fields || {}).forEach(([id, value]) => {
+    const candMatch = id.match(/^f-(c[2-6])/);
+    if (candMatch && hiddenCandidates.has(candMatch[1])) return;
     const el = $(id);
     if (el) el.value = value;
   });
 
   // Sync flag images to restored country selects (programmatic .value= doesn't fire 'change')
   ['c1','c2','c3','c4','c5','c6'].forEach((k, i) => {
+    if (hiddenCandidates.has(k)) return;
     const sel = $(`f-${k}c`);
     const fi  = $(`fi${i + 1}`);
     if (sel && sel.value && fi) fi.src = flag(sel.value);
@@ -2262,13 +2276,16 @@ function restoreDraft() {
 
   // Skills / custom skills chips
   ['c1','c2','c3','c4','c5','c6'].forEach(k => {
-    if (draft.skills && Array.isArray(draft.skills[k])) skills[k] = draft.skills[k];
-    if (draft.customSkills && Array.isArray(draft.customSkills[k])) customSkills[k] = draft.customSkills[k];
+    if (!hiddenCandidates.has(k)) {
+      if (draft.skills && Array.isArray(draft.skills[k])) skills[k] = draft.skills[k];
+      if (draft.customSkills && Array.isArray(draft.customSkills[k])) customSkills[k] = draft.customSkills[k];
+    }
     renderChips(k);
     renderCustomChips(k);
   });
 
-  // Candidate toggles (c2–c6) — expand/collapse panel to match
+  // Candidate toggles (c2–c6) — expand/collapse panel to match. Always applied regardless of
+  // hiddenCandidates — this loop is what SETS hiddenCandidates' correct (off) visual state.
   ['c2','c3','c4','c5','c6'].forEach(k => {
     if (!draft.toggles || !(k in draft.toggles)) return;
     const t = $(`toggle-${k}`);
@@ -2281,10 +2298,14 @@ function restoreDraft() {
   // <select id="f-${k}-cv-registry"> only holds the static "Loading…" placeholder at this point
   // (loadCvIndex() hasn't populated real <option>s yet) — setting .value to a filename that has
   // no matching <option> is a silent no-op. Hand the picks to loadCvIndex() via _pendingCvDraft
-  // so it can (re)apply them the moment real options exist.
-  if (draft.cv && Object.keys(draft.cv).length) _pendingCvDraft = { ...draft.cv };
+  // so it can (re)apply them the moment real options exist. Hidden candidates' CV picks are excluded
+  // for the same stale-data reason as the fields above.
+  const cvToRestore = draft.cv
+    ? Object.fromEntries(Object.entries(draft.cv).filter(([k]) => !hiddenCandidates.has(k)))
+    : {};
+  if (Object.keys(cvToRestore).length) _pendingCvDraft = { ...cvToRestore };
   ['c1','c2','c3','c4','c5','c6'].forEach(k => {
-    const info = draft.cv && draft.cv[k];
+    const info = cvToRestore[k];
     if (!info) return;
     const chip   = $(`f-${k}-cv-chip`);
     const nameEl = $(`f-${k}-cv-chip-name`);
@@ -2314,95 +2335,103 @@ function populateSelect(id, defaultCode) {
 /* ══════════════════════════════════════════════
    SHOW APP
 ══════════════════════════════════════════════ */
+let _appStarted = false; // showApp() runs again on every re-login in the same tab (logout doesn't reload
+                          // the page) — without this guard, every listener below gets bound again and the
+                          // three pollers below stack indefinitely, each re-login multiplying the 3s/30s/90s
+                          // background request volume and running every skill-chip-removal click N times.
+
 function showApp() {
   $('login-screen').style.display = 'none';
   $('app').style.display = 'flex';
 
-  ['c1','c2','c3','c4','c5','c6'].forEach((k, i) => {
-    const countryId = `f-${k}c`;
-    if ($(countryId)) {
-      populateSelect(countryId, 'br');
-      $(countryId).addEventListener('change', function () {
-        const fi = $(`fi${i + 1}`);
-        if (fi) fi.src = flag(this.value);
+  if (!_appStarted) {
+    _appStarted = true;
+
+    ['c1','c2','c3','c4','c5','c6'].forEach((k, i) => {
+      const countryId = `f-${k}c`;
+      if ($(countryId)) {
+        populateSelect(countryId, 'br');
+        $(countryId).addEventListener('change', function () {
+          const fi = $(`fi${i + 1}`);
+          if (fi) fi.src = flag(this.value);
+          schedulePreview();
+        });
+      }
+    });
+
+    // Clone skill optgroups from c1 into c3–c6 selects (avoids duplicating huge HTML blocks)
+    const c1SkillSel = $('f-c1-skill');
+    ['c3','c4','c5','c6'].forEach(k => {
+      const sel = $(`f-${k}-skill`);
+      if (!sel || !c1SkillSel) return;
+      const placeholder = sel.querySelector('option'); // keep the "+ Add a skill" option
+      sel.innerHTML = '';
+      if (placeholder) sel.appendChild(placeholder.cloneNode(true));
+      c1SkillSel.querySelectorAll('optgroup').forEach(og => sel.appendChild(og.cloneNode(true)));
+    });
+
+    // All form inputs trigger preview
+    document.querySelectorAll('.fi, .fta, .fs').forEach(el => {
+      el.addEventListener('input', schedulePreview);
+    });
+
+    // Skill selects
+    ['c1','c2','c3','c4','c5','c6'].forEach(k => {
+      const sel = $(`f-${k}-skill`);
+      if (sel) sel.addEventListener('change', function() { addSkill(k, this); });
+    });
+
+    // Skill chip remove — event delegation (predefined + custom)
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.skill-rm');
+      if (!btn) return;
+      btn.dataset.custom ? removeCustomSkill(btn.dataset.c, btn.dataset.s) : removeSkill(btn.dataset.c, btn.dataset.s);
+    });
+
+    // Custom skill inputs — Enter key or + button
+    ['c1','c2','c3','c4','c5','c6'].forEach(c => {
+      const inp = $(`f-${c}-custom`);
+      const btn = $(`btn-${c}-add`);
+      if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSkill(c); } });
+      if (btn) btn.addEventListener('click', () => addCustomSkill(c));
+    });
+
+    ['c1','c2','c3','c4','c5','c6'].forEach(k => setupCvBlock(k));
+
+    // Candidate toggles (c2 starts checked/visible; c3–c6 start unchecked/hidden)
+    ['c2','c3','c4','c5','c6'].forEach(k => {
+      const toggle = $(`toggle-${k}`);
+      if (!toggle) return;
+      toggle.addEventListener('change', () => {
+        $(`fsec-${k}`).classList.toggle('candidate-hidden', !toggle.checked);
         schedulePreview();
       });
-    }
-  });
-
-  // Clone skill optgroups from c1 into c3–c6 selects (avoids duplicating huge HTML blocks)
-  const c1SkillSel = $('f-c1-skill');
-  ['c3','c4','c5','c6'].forEach(k => {
-    const sel = $(`f-${k}-skill`);
-    if (!sel || !c1SkillSel) return;
-    const placeholder = sel.querySelector('option'); // keep the "+ Add a skill" option
-    sel.innerHTML = '';
-    if (placeholder) sel.appendChild(placeholder.cloneNode(true));
-    c1SkillSel.querySelectorAll('optgroup').forEach(og => sel.appendChild(og.cloneNode(true)));
-  });
-
-  // All form inputs trigger preview
-  document.querySelectorAll('.fi, .fta, .fs').forEach(el => {
-    el.addEventListener('input', schedulePreview);
-  });
-
-  // Skill selects
-  ['c1','c2','c3','c4','c5','c6'].forEach(k => {
-    const sel = $(`f-${k}-skill`);
-    if (sel) sel.addEventListener('change', function() { addSkill(k, this); });
-  });
-
-  // Skill chip remove — event delegation (predefined + custom)
-  document.addEventListener('click', e => {
-    const btn = e.target.closest('.skill-rm');
-    if (!btn) return;
-    btn.dataset.custom ? removeCustomSkill(btn.dataset.c, btn.dataset.s) : removeSkill(btn.dataset.c, btn.dataset.s);
-  });
-
-  // Custom skill inputs — Enter key or + button
-  ['c1','c2','c3','c4','c5','c6'].forEach(c => {
-    const inp = $(`f-${c}-custom`);
-    const btn = $(`btn-${c}-add`);
-    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSkill(c); } });
-    if (btn) btn.addEventListener('click', () => addCustomSkill(c));
-  });
-
-  ['c1','c2','c3','c4','c5','c6'].forEach(k => setupCvBlock(k));
-
-  // Candidate toggles (c2 starts checked/visible; c3–c6 start unchecked/hidden)
-  ['c2','c3','c4','c5','c6'].forEach(k => {
-    const toggle = $(`toggle-${k}`);
-    if (!toggle) return;
-    toggle.addEventListener('change', () => {
-      $(`fsec-${k}`).classList.toggle('candidate-hidden', !toggle.checked);
-      schedulePreview();
     });
-  });
 
-  restoreDraft();     // rehydrate any autosaved form state before the first render
+    // ── Periodic cvIndex refresh (30 s) — picks up newly processed CVs ───────
+    // Prevents cvIndex from staying [] if page loaded before CV was processed.
+    setInterval(() => loadCvIndex(), 30000);
+
+    // ── Auto-poll: check Drive every 3 s for new CVs ────────────────────────
+    // CV uploaded to Drive → appears in "Select CV to process" within ~3 s.
+    // Keep-alive ping every 90 s prevents Apps Script cold start (15-30 s delay).
+    setInterval(() => {
+      if (_processingFilename) return;     // don't poll while processing
+      loadInboxFiles().catch(() => {});
+    }, 3000);
+
+    // Keep Apps Script warm — ping every 90 s so it never cold-starts
+    if (typeof CV_DRIVE_INDEX_URL !== 'undefined' && CV_DRIVE_INDEX_URL) {
+      const _warmup = () => fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now()).catch(() => {});
+      _warmup();                           // immediate on load
+      setInterval(_warmup, 90000);        // every 90 s thereafter
+    }
+  }
+
+  restoreDraft();     // rehydrate any autosaved form state before the first render — safe to rerun on re-login
   updatePreview();
   loadCvIndex();
-  loadInboxFiles();   // populate pipeline dropdown from Drive inbox
-
-  // ── Periodic cvIndex refresh (30 s) — picks up newly processed CVs ───────
-  // Prevents cvIndex from staying [] if page loaded before CV was processed.
-  setInterval(() => loadCvIndex(), 30000);
-
-  // ── Auto-poll: check Drive every 3 s for new CVs ────────────────────────
-  // CV uploaded to Drive → appears in "Select CV to process" within ~3 s.
-  // Keep-alive ping every 90 s prevents Apps Script cold start (15-30 s delay).
-  let _lastFileList = '';
-  setInterval(() => {
-    if (_processingFilename) return;     // don't poll while processing
-    loadInboxFiles().catch(() => {});
-  }, 3000);
-
-  // Keep Apps Script warm — ping every 90 s so it never cold-starts
-  if (typeof CV_DRIVE_INDEX_URL !== 'undefined' && CV_DRIVE_INDEX_URL) {
-    const _warmup = () => fetch(CV_DRIVE_INDEX_URL + '?action=status&t=' + Date.now()).catch(() => {});
-    _warmup();                           // immediate on load
-    setInterval(_warmup, 90000);        // every 90 s thereafter
-  }
+  loadInboxFiles();   // populate pipeline dropdown from Drive inbox — safe to rerun on re-login
 }
 
 /* ══════════════════════════════════════════════
@@ -2526,7 +2555,7 @@ function setupCvBlock(candidate) {
         item.className = 'cv-result-item';
         item.innerHTML =
           `<span class="cv-ri-name">${hlMatch(cv.name, q)}</span>` +
-          (cv.title ? `<span class="cv-ri-title">${cv.title}</span>` : '');
+          (cv.title ? `<span class="cv-ri-title">${esc(cv.title)}</span>` : '');
         item.addEventListener('mousedown', e => { e.preventDefault(); pickCandidate(cv); });
         results.appendChild(item);
       });
@@ -2810,7 +2839,7 @@ async function _requestNotifPermission() {
 }
 
 function _cvNotify(names) {
-  const who = names.length === 1 ? names[0] : `${names.length} CVs`;
+  const who = names.length === 1 ? esc(names[0]) : `${names.length} CVs`; // toastReady() renders via innerHTML — escape the AI-extracted/CV-derived name before it gets there
   toastReady(`✅ ${who} ready to send!`);
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const n = new Notification('PalmDeck · CV Ready ✅', {
@@ -2971,7 +3000,7 @@ async function processSelectedCV() {
   btn.disabled = true;
   btn.innerHTML = '<span class="pl-spin-icon">⟳</span> Triggering…';
   if (!isProcessed) {
-    status.innerHTML = `<span class="pl-pulse"></span> Sending <strong>${fileName}</strong> to GitHub Actions…`;
+    status.innerHTML = `<span class="pl-pulse"></span> Sending <strong>${esc(fileName)}</strong> to GitHub Actions…`;
   }
 
   await _requestNotifPermission();
@@ -3068,7 +3097,7 @@ async function _pollForCV(inboxFilename) {
     const btn    = $('pl-btn-trigger');
 
     status.innerHTML =
-      `✅ <strong>${found.name}</strong> ready in ${timeStr}.<br>` +
+      `✅ <strong>${esc(found.name)}</strong> ready in ${timeStr}.<br>` +
       `<span style="font-size:10px;color:var(--muted)">Now available in the candidate list below.</span>`;
 
     _processingFilename = null;
